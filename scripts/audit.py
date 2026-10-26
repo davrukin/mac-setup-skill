@@ -85,7 +85,9 @@ def bundle_id(app: Path) -> str:
 
 
 def looks_managed(app_name: str, managed_casks: set[str]) -> bool:
-    """Catch naming mismatches like iTerm.app vs the cask `iterm2`."""
+    """Name-based fallback (iTerm.app vs the cask `iterm2`), used only when Homebrew's cask
+    metadata is unavailable. Homebrew's own app/bundle-id data is preferred because fuzzy
+    names also swallow unrelated apps (the `claude` app vs the `claude-code` cask)."""
     n = common.alnum(app_name)
     if len(n) < 4:
         return False
@@ -96,8 +98,47 @@ def looks_managed(app_name: str, managed_casks: set[str]) -> bool:
     return False
 
 
-def scan_apps(managed_casks: set[str], known_casks: set[str] | None) -> dict:
+def load_consolidation() -> dict[str, dict]:
+    """Rules that replace a family of apps with one installer/launcher cask."""
+    path = common.REFERENCES_DIR / "categories.yaml"
+    with open(path, "r", encoding="utf-8") as f:
+        return (common.yaml.safe_load(f) or {}).get("consolidate", {}) or {}
+
+
+def consolidation_target(token: str, bundle: str, rules: dict[str, dict]) -> str | None:
+    for target, rule in rules.items():
+        if token == target:
+            return None
+        if token and any(re.search(p, token) for p in rule.get("cask_patterns", [])):
+            return target
+        if bundle and any(bundle.startswith(p) for p in rule.get("bundle_prefixes", [])):
+            return target
+    return None
+
+
+def resolve_casks(name: str, bundle: str, index: dict | None, known: set[str] | None) -> list[str]:
+    """Cask tokens that install this app, best first. Uses Homebrew's artifact metadata
+    (app bundle name, then bundle id) and falls back to guessing from the name."""
+    if index is None:
+        return [c for c in common.cask_candidates(name) if known and c in known]
+    found: list[str] = []
+    for token in index["apps"].get(name.lower(), []) + index["bundles"].get(bundle, []):
+        if token not in found:
+            found.append(token)
+    slugs = common.cask_candidates(name)
+    # Casks installed from a .pkg (Zoom, Office) or with versioned app names list no matching
+    # .app artifact, so a cask named like the app is still a good answer.
+    found += [c for c in slugs if known and c in known and c not in found]
+    found.sort(key=lambda t: (t in index["unusable"], t not in slugs))
+    return found
+
+
+def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
+              index: dict | None = None, rules: dict[str, dict] | None = None) -> dict:
+    rules = rules or {}
+    unusable = index["unusable"] if index else set()
     adopted, unmatched, mas_apps, apple = [], [], [], 0
+    consolidated: dict[str, list[str]] = {}
     seen = set()
     for root in app_dirs():
         for app in iter_apps(root):
@@ -105,18 +146,25 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None) -> dict:
             if name in seen:
                 continue
             seen.add(name)
-            if bundle_id(app).startswith("com.apple."):
+            bundle = bundle_id(app)
+            if bundle.startswith("com.apple."):
                 apple += 1
                 continue
             if (app / "Contents" / "_MASReceipt").exists():
                 mas_apps.append(name)  # covered by the `mas` list
                 continue
-            candidates = common.cask_candidates(name)
-            if any(c in managed_casks for c in candidates) or looks_managed(name, managed_casks):
+            tokens = resolve_casks(name, bundle, index, known_casks)
+            target = consolidation_target(tokens[0] if tokens else "", bundle, rules)
+            if target:
+                consolidated.setdefault(target, []).append(name)
                 continue
-            match = next((c for c in candidates if known_casks and c in known_casks), None)
-            if match:
-                adopted.append(match)
+            if any(t in managed_casks for t in tokens):
+                continue
+            if index is None and looks_managed(name, managed_casks):
+                continue
+            usable = [t for t in tokens if t not in unusable]
+            if usable:
+                adopted.append(usable[0])
             else:
                 unmatched.append(name)
     return {
@@ -124,6 +172,7 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None) -> dict:
         "unmatched_apps": sorted(set(unmatched), key=str.lower),
         "mas_apps_seen": sorted(set(mas_apps), key=str.lower),
         "apple_apps_skipped": apple,
+        "consolidated": {t: sorted(set(v), key=str.lower) for t, v in consolidated.items()},
     }
 
 
@@ -132,13 +181,30 @@ def build_inventory() -> dict:
     known = common.available_casks()
     if known is None:
         print("⚠️  Cannot list Homebrew casks here, so manually installed apps cannot be matched to casks.")
-    scan = scan_apps(set(inv["casks"]), known)
-    inv["casks"] = sorted(set(inv["casks"]) | set(scan["adopted_casks"]))
+    index = common.cask_index() if known else None
+    if known and index is None:
+        print("⚠️  Homebrew cask metadata unavailable; falling back to matching by app name.")
+    rules = load_consolidation()
+    scan = scan_apps(set(inv["casks"]), known, index, rules)
+
+    # Casks brew already installs can belong to a consolidated family too (e.g. intellij-idea-ce).
+    consolidated = scan["consolidated"]
+    kept = []
+    for token in set(inv["casks"]) | set(scan["adopted_casks"]):
+        target = consolidation_target(token, "", rules)
+        if target:
+            consolidated.setdefault(target, []).append(token)
+        else:
+            kept.append(token)
+    for target in consolidated:
+        if target in (known or set()):
+            kept.append(target)
+    scan["consolidated"] = {t: sorted(set(v), key=str.lower) for t, v in consolidated.items()}
     inventory = {
         "generated": date.today().isoformat(),
         "taps": sorted(inv["taps"]),
         "brews": sorted(inv["brews"]),
-        "casks": inv["casks"],
+        "casks": sorted(set(kept)),
         "mas": sorted(inv["mas"], key=lambda m: m["name"].lower()),
         "vscode": sorted(inv["vscode"]),
         **scan,
@@ -160,7 +226,7 @@ Brews: {inventory['brews']}
 Mac App Store apps: {mas_names}
 VS Code extensions: {inventory['vscode']}
 
-Use ONLY items from the lists above, exactly as written; an item may appear in several groups.
+Use ONLY items from the lists above, exactly as written (the shared "base" tools are added to every group automatically); an item may appear in several groups.
 Groups: "developer" (software engineering), "creative" (design, photo, video, audio), "essentials" (productivity and system utilities).
 Respond ONLY with a JSON object of this shape:
 {{"developer": {{"casks": [], "brews": [], "mas": [], "vscode": []}}, "creative": {{...}}, "essentials": {{...}}}}
@@ -183,6 +249,7 @@ def choose_groups(inventory: dict, args) -> dict[str, dict]:
                 print("✅ AI grouping applied (unknown items dropped).")
     if not groups:
         groups = categorize.heuristic(inventory)
+    categorize.apply_shared(groups, inventory)  # the shared base goes into every preset, however they were grouped
     for w in warnings:
         print(f"⚠️  {w}")
     return groups
