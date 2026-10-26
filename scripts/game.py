@@ -8,8 +8,9 @@ category, colour-coded, and the app's icon when the terminal can draw images (iT
 WezTerm, kitty, Ghostty). Progress is saved to data/game_choices.json, so you can quit and
 resume, and re-audits reuse your earlier choices.
 
-Keys:  <- skip (everything only)   -> / up / down  first / second / third category
-       1-9 category by number      Enter  accept the suggestion      u undo      q save and quit
+Keys:  <- or s skip (everything only)   -> / up / down  first / second / third category
+       1-9 category by number, or its own letter (developer d, common c)
+       Enter  accept the suggestion   n  new category + hotkey   u undo   q save and quit
 """
 from __future__ import annotations
 
@@ -30,6 +31,8 @@ from pathlib import Path
 import categorize
 import common
 
+RESERVED_KEYS = set("qusn ")  # quit, undo, skip, new category, space; digits and arrows are fixed too
+DEFAULT_HOTKEYS = {"developer": "d", "common": "c"}
 SKIP = "skip"  # the item only lives in "everything"
 DEFAULT_CATEGORIES = ["developer", "common"]
 DESCRIPTIONS = {
@@ -72,6 +75,27 @@ def suggest(item: Item, categories: list[str], rules: dict) -> str | None:
     if "common" in hits:
         return "common"
     return hits[0] if hits else None
+
+
+def parse_categories(specs: list[str]) -> dict[str, str]:
+    """["developer", "creative:r"] -> {"developer": "d", "creative": "r"} (name -> hotkey, "" if none)."""
+    out: dict[str, str] = {}
+    for spec in specs:
+        name, _, key = spec.strip().partition(":")
+        name = name.strip().lower()
+        if name and name != SKIP:
+            out[name] = key.strip().lower() or DEFAULT_HOTKEYS.get(name, "")
+    return out
+
+
+def hotkey_problem(key: str, hotkeys: dict[str, str]) -> str | None:
+    if len(key) != 1 or not key.isalpha():
+        return "a hotkey is a single letter"
+    if key in RESERVED_KEYS:
+        return f"'{key}' is already used by the game (q quit, u undo, s skip, n new category)"
+    if key in hotkeys.values():
+        return f"'{key}' already belongs to {next(c for c, k in hotkeys.items() if k == key)}"
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -231,6 +255,21 @@ class Keys:
 
             termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old)
 
+    def prompt(self, text: str) -> str:
+        """Ask for a line of text (cooked mode with echo); scripted runs take the next token."""
+        if self.script is not None:
+            return self.script.pop(0) if self.script else ""
+        import termios
+        import tty
+
+        termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old)
+        try:
+            return input(text).strip()
+        except EOFError:
+            return ""
+        finally:
+            tty.setcbreak(self.fd)
+
     def read(self) -> str:
         if self.script is not None:
             return self.script.pop(0) if self.script else "q"
@@ -252,16 +291,26 @@ class Keys:
 # --------------------------------------------------------------------------
 # State
 # --------------------------------------------------------------------------
-def load_choices(path: Path = CHOICES_FILE) -> dict[str, str]:
+def _load_state(path: Path) -> dict:
     try:
-        return dict(json.loads(path.read_text(encoding="utf-8")).get("choices", {}))
+        return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
 
 
-def save_choices(choices: dict[str, str], path: Path = CHOICES_FILE) -> None:
+def load_choices(path: Path = CHOICES_FILE) -> dict[str, str]:
+    return dict(_load_state(path).get("choices", {}))
+
+
+def load_categories(path: Path = CHOICES_FILE) -> dict[str, str]:
+    """Categories (name -> hotkey) saved by earlier games, including ones made in-game."""
+    return {str(k): str(v) for k, v in _load_state(path).get("categories", {}).items()}
+
+
+def save_choices(choices: dict[str, str], hotkeys: dict[str, str] | None = None, path: Path = CHOICES_FILE) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"choices": dict(sorted(choices.items()))}, indent=2) + "\n", encoding="utf-8")
+    state = {"categories": dict(hotkeys or {}), "choices": dict(sorted(choices.items()))}
+    path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
 
 
 def build_grouping(items: list[Item], choices: dict[str, str], categories: list[str]) -> dict[str, dict]:
@@ -278,7 +327,7 @@ def build_grouping(items: list[Item], choices: dict[str, str], categories: list[
 # --------------------------------------------------------------------------
 # Game
 # --------------------------------------------------------------------------
-def card(items, i, categories, colours, choices, icons, rules, note) -> str:
+def card(items, i, categories, hotkeys, colours, choices, icons, rules, note) -> str:
     item = items[i]
     done = sum(1 for it in items if it.key in choices)
     width = 30
@@ -298,24 +347,51 @@ def card(items, i, categories, colours, choices, icons, rules, note) -> str:
     out.append("\n\n")
     arrows = ["→", "↑", "↓"]
     for n, c in enumerate(categories):
-        hint = f"{arrows[n]} or {n + 1}" if n < len(arrows) else str(n + 1)
-        out.append(f"  {hint:<7} {badge(c, c, colours)}\n")
-    out.append(f"  ←       {badge('everything only', SKIP, colours)}\n\n")
-    out.append("  Enter accept suggestion   u undo   q save and quit\n")
+        hint = " or ".join(([arrows[n]] if n < len(arrows) else []) + [str(n + 1)] + ([hotkeys[c]] if hotkeys.get(c) else []))
+        out.append(f"  {hint:<11} {badge(c, c, colours)}\n")
+    out.append(f"  {'← or s':<11} {badge('everything only', SKIP, colours)}\n\n")
+    out.append("  Enter accept suggestion   n new category   u undo   q save and quit\n")
     if note:
         out.append(f"\n  {note}\n")
     return "".join(out)
 
 
+def add_category(keys: Keys, hotkeys: dict[str, str], categories: list[str]) -> str | None:
+    """Ask for a new category name and hotkey; returns the name, or None if cancelled/invalid."""
+    name = re.sub(r"[^a-z0-9_-]+", "-", keys.prompt("\n  New category name: ").lower()).strip("-")
+    if not name or name in (SKIP, "everything", "current_system") or name in hotkeys:
+        return None
+    while True:
+        key = keys.prompt(f"  Hotkey for '{name}' (one letter, Enter for none): ").lower()
+        if not key:
+            break
+        problem = hotkey_problem(key, hotkeys)
+        if not problem:
+            break
+        print(f"  {problem}")
+        if keys.script is not None:  # scripted runs cannot retry
+            key = ""
+            break
+    hotkeys[name] = key
+    categories.append(name)
+    return name
+
+
 def play(inventory: dict, categories: list[str] | None = None, redo: bool = False,
          icon_mode: str = "auto", kinds=KIND_ORDER) -> dict[str, dict]:
     """Run the game and return the grouping JSON for the choices made."""
-    categories = list(dict.fromkeys(categories or DEFAULT_CATEGORIES))
-    if "common" not in categories:
-        categories.append("common")
+    hotkeys = parse_categories(categories or DEFAULT_CATEGORIES)
+    hotkeys.setdefault("common", DEFAULT_HOTKEYS["common"])
+    for name, key in load_categories().items():  # categories made in earlier games
+        hotkeys.setdefault(name, key)
+    seen: set[str] = set()
+    for name in list(hotkeys):  # drop hotkeys that clash after merging
+        if hotkeys[name] and (hotkeys[name] in seen or hotkeys[name] in RESERVED_KEYS or len(hotkeys[name]) != 1):
+            hotkeys[name] = ""
+        seen.add(hotkeys[name])
+    categories = list(hotkeys)
     items = build_items(inventory, kinds)
     rules = categorize.load_rules()
-    colours = colour_map(categories)
     choices = {} if redo else {k: v for k, v in load_choices().items() if any(it.key == k for it in items)}
     scripted = os.environ.get("MAC_SETUP_GAME_KEYS") is not None
     if not scripted and not (sys.stdin.isatty() and sys.stdout.isatty()):
@@ -332,7 +408,8 @@ def play(inventory: dict, categories: list[str] | None = None, redo: bool = Fals
     try:
         while pos < len(todo):
             i = todo[pos]
-            sys.stdout.write(card(items, i, categories, colours, choices, icons, rules, note))
+            colours = colour_map(categories)
+            sys.stdout.write(card(items, i, categories, hotkeys, colours, choices, icons, rules, note))
             sys.stdout.flush()
             note = ""
             key = keys.read()
@@ -345,7 +422,13 @@ def play(inventory: dict, categories: list[str] | None = None, redo: bool = Fals
                     pos = todo.index(j)
                 continue
             arrow = {"right": 0, "up": 1, "down": 2}
-            if key == "enter":
+            if key == "n":
+                made = add_category(keys, hotkeys, categories)
+                if not made:
+                    note = "No category added."
+                    continue
+                pick, note = made, f"Added '{made}' (hotkey {hotkeys[made] or 'number only'}); this item went into it."
+            elif key == "enter":
                 pick = suggest(items[i], categories, rules) or SKIP
             elif key in ("left", "s", " "):
                 pick = SKIP
@@ -353,6 +436,8 @@ def play(inventory: dict, categories: list[str] | None = None, redo: bool = Fals
                 pick = categories[arrow[key]]
             elif key.isdigit() and 1 <= int(key) <= len(categories):
                 pick = categories[int(key) - 1]
+            elif key in hotkeys.values():
+                pick = next(c for c, k in hotkeys.items() if k == key)
             else:
                 continue
             history.append(i)
@@ -360,7 +445,7 @@ def play(inventory: dict, categories: list[str] | None = None, redo: bool = Fals
             pos += 1
     finally:
         keys.close()
-        save_choices(choices)
+        save_choices(choices, hotkeys)
     sys.stdout.write("\x1b[2J\x1b[H")
     counts = {c: sum(1 for v in choices.values() if v == c) for c in categories}
     left = len(items) - len(choices)
@@ -376,7 +461,7 @@ if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--categories", default=",".join(DEFAULT_CATEGORIES), help="comma-separated categories (default: developer,common)")
+    ap.add_argument("--categories", default=",".join(DEFAULT_CATEGORIES), help="comma-separated categories, optionally name:hotkey (default: developer,common)")
     ap.add_argument("--redo", action="store_true", help="ignore saved choices and start over")
     ap.add_argument("--icons", choices=["auto", "iterm", "kitty", "off"], default="auto")
     a = ap.parse_args()
