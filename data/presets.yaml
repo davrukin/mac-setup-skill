@@ -55,10 +55,9 @@ presets:
     - yt-dlp
     casks:
     - affinity
-    - affinity-photo
     - altserver
-    - android-studio
     - ankerwork
+    - antigravity
     - antigravity-cli
     - antigravity-ide
     - artcraft
@@ -68,11 +67,14 @@ presets:
     - betterdisplay
     - bettertouchtool
     - boom-3d
+    - brave-browser@beta
     - burn
     - cadcraft
     - caffeine
+    - caldigit-docking-utility
     - calibre
     - chatgpt
+    - claude
     - claude-code
     - cleanmymac
     - clickup
@@ -80,15 +82,15 @@ presets:
     - coconutbattery
     - crossover
     - cursor
-    - darktable
     - db-browser-for-sqlite
     - ddpm
     - deckcraft
     - designcraft
     - devutils
-    - digikam
     - disk-drill
     - effectcraft
+    - epic-games
+    - epilogue-playback
     - figma
     - filmcraft
     - firefox
@@ -98,10 +100,12 @@ presets:
     - gb-studio
     - gemini
     - gimp
+    - github
     - gnucash
     - godspeed
     - gog-galaxy
     - google-chrome
+    - google-chrome@beta
     - google-drive
     - gridcraft
     - handbrake-app
@@ -109,17 +113,15 @@ presets:
     - libreoffice
     - lightcraft
     - lm-studio
-    - macdown
     - macs-fan-control
     - macwhisper
-    - makemkv
     - marked-app
     - mediainfo
-    - messenger
     - meta
     - metaimage
     - microsoft-edge
     - microsoft-excel
+    - microsoft-office
     - microsoft-onenote
     - microsoft-outlook
     - microsoft-powerpoint
@@ -132,12 +134,12 @@ presets:
     - notion
     - notion-calendar
     - obsidian
-    - old-school-runescape
     - onedrive
     - onyx
-    - openemu
+    - openscad@snapshot
     - opera
     - pacifist
+    - parallels
     - parallels-toolbox
     - pdf-expert
     - pdfcraft
@@ -148,7 +150,6 @@ presets:
     - proxyman
     - quicken
     - rawtherapee
-    - receipts
     - remember-the-milk
     - runescape
     - setapp
@@ -182,8 +183,8 @@ presets:
     - xnviewmp
     - zed
     - zen
-    - zenmap
     - zeplin
+    - zoom
     - zotero
     mas:
     - name: Agenda
@@ -325,6 +326,17 @@ presets:
     - name: Zookeeper World
       id: 1370858242
     vscode: []
+  base:
+    description: Tools every Mac gets, whatever its role
+    source: audit:heuristic
+    taps: []
+    brews: []
+    casks:
+    - claude
+    - claude-code
+    - figma
+    mas: []
+    vscode: []
   developer:
     description: Software engineering tools (editors, terminals, CLIs, containers,
       Android/iOS tooling)
@@ -346,9 +358,12 @@ presets:
     - tree
     - uv
     casks:
-    - android-studio
+    - claude
+    - claude-code
     - cursor
+    - figma
     - flutter
+    - github
     - jetbrains-toolbox
     - proxyman
     - sourcetree
@@ -370,10 +385,9 @@ presets:
     - yt-dlp
     casks:
     - affinity
-    - affinity-photo
     - audacity
-    - darktable
-    - digikam
+    - claude
+    - claude-code
     - figma
     - gimp
     - handbrake-app
@@ -401,6 +415,9 @@ presets:
     casks:
     - bartender
     - betterdisplay
+    - claude
+    - claude-code
+    - figma
     - firefox
     - google-chrome
     - microsoft-edge
@@ -410,6 +427,7 @@ presets:
     - slack
     - spotify
     - vlc
+    - zoom
     mas:
     - name: Keynote
       id: 409183694
