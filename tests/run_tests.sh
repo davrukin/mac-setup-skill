@@ -82,6 +82,23 @@ check "shared common set is added to assistant-made groups too" py "
 import yaml;P=yaml.safe_load(open('$PRESETS'))['presets'];assert {'claude','figma'}<=set(P['photo']['casks']);assert 'common' in P"
 check "hallucinated items dropped with a warning" grep -q "hallucinated-app" "$TMP/group.out"
 
+echo "== sorting game =="
+export MAC_SETUP_GAME_KEYS="enter,enter,enter,enter,enter,right,left,u,2,q"
+python3 "$SCRIPTS/audit.py" --game > "$TMP/game.out"
+unset MAC_SETUP_GAME_KEYS
+check "game saves choices to game_choices.json" py "
+import json;c=json.load(open('$MAC_SETUP_DATA/game_choices.json'))['choices'];assert c['casks:google-chrome']=='skip' and c['casks:iterm2']=='developer' and c['casks:visual-studio-code']=='common',c"
+check "game picks become presets; undo replaced the skip" py "
+import yaml;P=yaml.safe_load(open('$PRESETS'))['presets']
+assert {'iterm2','jetbrains-toolbox'}<=set(P['developer']['casks']) and 'google-chrome' not in P['developer']['casks']
+assert {'claude','figma','visual-studio-code'}<=set(P['common']['casks']),P['common']
+assert 'creative' not in P and 'google-chrome' in P['current_system']['casks']"
+check "common picks are merged into the developer preset" py "
+import yaml;P=yaml.safe_load(open('$PRESETS'))['presets'];assert {'claude','visual-studio-code'}<=set(P['developer']['casks'])"
+MAC_SETUP_GAME_KEYS="q" python3 "$SCRIPTS/audit.py" --game > "$TMP/game2.out"
+check "second run resumes from saved choices" bash -c "grep -q 'Resuming' '$TMP/game2.out' && python3 -c \"import yaml;P=yaml.safe_load(open('$PRESETS'))['presets'];assert 'iterm2' in P['developer']['casks']\""
+check "game refuses to run without a terminal" bash -c "! python3 '$SCRIPTS/audit.py' --game < /dev/null >/dev/null 2>&1"
+
 echo "== presets import / list / export =="
 cat > "$TMP/community.Brewfile" <<'BF'
 # someone else's Brewfile
