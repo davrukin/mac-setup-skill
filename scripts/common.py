@@ -1,6 +1,7 @@
 """Shared helpers for the mac-setup scripts. Standard library + PyYAML only."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -180,6 +181,69 @@ def available_casks() -> set[str] | None:
 
 def available_formulae() -> set[str] | None:
     return _token_set("formulae")
+
+
+_CASK_INDEX: dict | None = None
+_CASK_INDEX_LOADED = False
+
+
+def _as_list(value) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    return [v for v in value or [] if isinstance(v, str)]
+
+
+def cask_index() -> dict | None:
+    """Ask Homebrew which app bundle / bundle id each cask installs.
+
+    Returns {"apps": {lowercase app name: [tokens]}, "bundles": {bundle id: [tokens]},
+    "unusable": {tokens that are deprecated or disabled}}, or None when brew cannot tell us
+    (callers then fall back to name guessing). Costs one `brew info --json=v2` call over
+    every cask (roughly 15 seconds), so it is computed once per process.
+    """
+    global _CASK_INDEX, _CASK_INDEX_LOADED
+    if _CASK_INDEX_LOADED:
+        return _CASK_INDEX
+    _CASK_INDEX_LOADED = True
+    tokens = available_casks()
+    if not tokens:
+        return None
+    out = run(["brew", "info", "--json=v2", "--cask", *sorted(tokens)], timeout=600)
+    if not out:
+        return None
+    try:
+        casks = json.loads(out).get("casks", [])
+    except ValueError:
+        return None
+    apps: dict[str, list[str]] = {}
+    bundles: dict[str, list[str]] = {}
+    unusable: set[str] = set()
+    for cask in casks:
+        token = cask.get("token")
+        if not token:
+            continue
+        if cask.get("deprecated") or cask.get("disabled"):
+            unusable.add(token)
+        for artifact in cask.get("artifacts", []):
+            if not isinstance(artifact, dict):
+                continue
+            for app in _as_list(artifact.get("app")):
+                key = re.sub(r"\.app$", "", app.rsplit("/", 1)[-1], flags=re.I).lower()
+                apps.setdefault(key, []).append(token)
+            uninstall = artifact.get("uninstall")
+            for entry in uninstall if isinstance(uninstall, list) else []:
+                if not isinstance(entry, dict):
+                    continue
+                # .pkg casks have no `app` artifact; their uninstall stanza still names the
+                # bundle id (quit / signal) and the app path (delete).
+                ids = _as_list(entry.get("quit")) + _as_list(entry.get("signal"))[1:]
+                for bid in ids:
+                    bundles.setdefault(bid, []).append(token)
+                for path in _as_list(entry.get("delete")):
+                    if path.endswith(".app"):
+                        apps.setdefault(path.rsplit("/", 1)[-1][:-4].lower(), []).append(token)
+    _CASK_INDEX = {"apps": apps, "bundles": bundles, "unusable": unusable}
+    return _CASK_INDEX
 
 
 # --------------------------------------------------------------------------
