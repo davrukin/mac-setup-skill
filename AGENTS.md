@@ -1,0 +1,10 @@
+# Agent instructions
+
+This repository is a skill. The full instructions are in [SKILL.md](SKILL.md); read it first and follow it. Reference material is in `references/`.
+
+Quick facts for agents that read only this file:
+
+- The scripts in `scripts/` must run on the Mac being audited or set up. If you only have a cloud sandbox, give the user the command and ask for the output file.
+- Entry point: `scripts/setup.sh` (`audit`, `recommend`, `deploy`, `presets`, `bootstrap`). Add `--yes` to skip confirmation prompts, and `MAC_SETUP_SKIP_VENV=1` to use the system `python3` with PyYAML.
+- Never run `deploy --run` without showing the user the dry-run output and getting a go-ahead.
+- After editing any script, run `bash tests/run_tests.sh`. It uses a fake `brew` and installs nothing.

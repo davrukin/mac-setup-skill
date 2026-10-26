@@ -1,0 +1,244 @@
+# Rules used by scripts/categorize.py to sort an inventory into role presets when no LLM
+# or assistant grouping is supplied. Edit freely: add tokens under casks/brews, or regexes
+# under patterns (matched against the formula/cask name, tap prefix removed).
+# mas_patterns are matched against Mac App Store app names.
+presets:
+  developer:
+    description: Software engineering tools (editors, terminals, CLIs, containers, Android/iOS tooling)
+    vscode: all
+    casks:
+      - visual-studio-code
+      - vscodium
+      - cursor
+      - windsurf
+      - zed
+      - sublime-text
+      - iterm2
+      - warp
+      - ghostty
+      - kitty
+      - alacritty
+      - wezterm
+      - docker
+      - docker-desktop
+      - orbstack
+      - utm
+      - postman
+      - insomnia
+      - bruno
+      - proxyman
+      - charles
+      - wireshark
+      - wireshark-app
+      - tableplus
+      - sequel-ace
+      - dbeaver-community
+      - github
+      - sourcetree
+      - fork
+      - gitkraken
+      - tower
+      - dash
+      - jetbrains-toolbox
+      - android-studio
+      - android-platform-tools
+      - android-commandlinetools
+      - flutter
+      - ngrok
+      - cyberduck
+      - hex-fiend
+      - imhex
+      - ghidra
+    brews:
+      - git
+      - gh
+      - git-lfs
+      - git-delta
+      - lazygit
+      - nvm
+      - fnm
+      - pnpm
+      - yarn
+      - pyenv
+      - uv
+      - pipx
+      - poetry
+      - go
+      - rust
+      - rustup
+      - ruby
+      - rbenv
+      - gradle
+      - maven
+      - kotlin
+      - ktlint
+      - cocoapods
+      - swiftlint
+      - swiftformat
+      - xcodegen
+      - jq
+      - yq
+      - ripgrep
+      - fd
+      - fzf
+      - bat
+      - eza
+      - tree
+      - tmux
+      - neovim
+      - vim
+      - htop
+      - btop
+      - wget
+      - curl
+      - httpie
+      - direnv
+      - zoxide
+      - starship
+      - mise
+      - asdf
+      - cmake
+      - ninja
+      - pkg-config
+      - shellcheck
+      - awscli
+      - azure-cli
+      - kubernetes-cli
+      - helm
+      - k9s
+      - terraform
+      - ansible
+      - docker-compose
+      - colima
+      - lima
+      - sqlite
+      - redis
+      - protobuf
+      - grpcurl
+      - scrcpy
+      - jadx
+      - apktool
+      - bundletool
+      - watchman
+      - mas
+    patterns:
+      - '^python(@[\d.]+)?$'
+      - '^node(@\d+)?$'
+      - '^openjdk(@\d+)?$'
+      - '^postgresql(@\d+)?$'
+      - '^mysql(@[\d.]+)?$'
+      - '^php(@[\d.]+)?$'
+      - '^llvm(@\d+)?$'
+      - '^gcc(@\d+)?$'
+      - '^jetbrains-'
+      - '^intellij-idea'
+      - '^pycharm'
+      - '^temurin'
+      - '^zulu'
+    mas_patterns:
+      - '(?i)xcode|testflight|transporter|swift playgrounds|simulator'
+
+  creative:
+    description: Photo, video, design and audio tools
+    casks:
+      - adobe-creative-cloud
+      - affinity-photo
+      - affinity-designer
+      - affinity-publisher
+      - affinity
+      - figma
+      - sketch
+      - blender
+      - gimp
+      - inkscape
+      - krita
+      - darktable
+      - rawtherapee
+      - digikam
+      - capture-one
+      - vuescan
+      - pixelmator-pro
+      - davinci-resolve
+      - handbrake
+      - handbrake-app
+      - obs
+      - audacity
+      - imageoptim
+      - xnviewmp
+      - kap
+    brews:
+      - ffmpeg
+      - imagemagick
+      - graphicsmagick
+      - exiftool
+      - exiv2
+      - libraw
+      - dcraw
+      - gifsicle
+      - potrace
+      - pngquant
+      - jpegoptim
+      - optipng
+      - mozjpeg
+      - yt-dlp
+    patterns:
+      - '^adobe-'
+      - '^affinity'
+      - '^capture-one'
+    mas_patterns:
+      - '(?i)pixelmator|photomator|affinity|final cut|logic pro|motion|compressor|lightroom|procreate|darkroom|halide|vsco|capture one'
+
+  essentials:
+    description: Everyday productivity and system utilities
+    casks:
+      - raycast
+      - alfred
+      - rectangle
+      - rectangle-pro
+      - 1password
+      - 1password-cli
+      - bitwarden
+      - obsidian
+      - notion
+      - notion-calendar
+      - slack
+      - zoom
+      - discord
+      - telegram
+      - signal
+      - whatsapp
+      - spotify
+      - arc
+      - google-chrome
+      - firefox
+      - brave-browser
+      - microsoft-edge
+      - the-unarchiver
+      - keka
+      - appcleaner
+      - stats
+      - maccy
+      - karabiner-elements
+      - monitorcontrol
+      - betterdisplay
+      - localsend
+      - linearmouse
+      - bartender
+      - ice
+      - aldente
+      - vlc
+      - iina
+      - shottr
+      - cleanshot
+      - loop
+      - itsycal
+      - daisydisk
+      - grandperspective
+      - alt-tab
+    brews:
+      - mas
+      - trash
+      - coreutils
+      - gnupg
+    mas_patterns:
+      - '(?i)magnet|amphetamine|things|bear|goodnotes|numbers|pages|keynote|1password|tailscale'

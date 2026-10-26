@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Stand-in for Homebrew used by tests/run_tests.sh. Never touches the real system.
+case "${1:-}" in
+  casks)    printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack; exit 0 ;;
+  formulae) printf '%s\n' git jq ripgrep fd fzf gh exiftool ffmpeg imagemagick wget mas bat eza; exit 0 ;;
+  bundle)
+    sub="${2:-}"
+    if [ "$sub" = "dump" ]; then
+      file=""; prev=""
+      for a in "$@"; do [ "$prev" = "--file" ] && file="$a"; prev="$a"; done
+      cat > "$file" <<'BREWFILE'
+tap "homebrew/bundle"
+tap "someone/tools"
+brew "git"
+brew "jq"
+brew "wget"
+brew "exiftool"
+brew "someone/tools/mytool"
+cask "visual-studio-code"
+cask "iterm2"
+cask "figma"
+mas "Xcode", id: 497799835
+mas "Pixelmator Pro", id: 1289583905
+vscode "ms-python.python"
+BREWFILE
+      exit 0
+    fi
+    echo "fake brew: $*"; exit 0 ;;
+esac
+echo "fake brew: unsupported: $*" >&2; exit 1

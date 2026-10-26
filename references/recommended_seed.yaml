@@ -1,0 +1,67 @@
+# Offline fallback recommendations, used by scripts/recommend.py when no web research,
+# --source list, or LLM is available. This is a SMALL curated starter set, not a
+# substitute for current online lists, and package names change over time. recommend.py
+# checks every name against `brew formulae` / `brew casks` and drops any that no
+# longer exist, so a stale entry is skipped rather than breaking an install.
+#
+# tier: 1 = very useful, 2 = nice to have, 3 = could be useful
+# categories: roles from references/categories.yaml this entry is relevant to
+
+# ---- developer -------------------------------------------------------------
+- {name: ripgrep, type: brew, tier: 1, categories: [developer], reason: "Fast recursive code search; the default grep replacement"}
+- {name: fd, type: brew, tier: 1, categories: [developer], reason: "Simple, fast alternative to find"}
+- {name: fzf, type: brew, tier: 1, categories: [developer], reason: "Fuzzy finder for files, history and git branches"}
+- {name: jq, type: brew, tier: 1, categories: [developer], reason: "Query and reshape JSON on the command line"}
+- {name: gh, type: brew, tier: 1, categories: [developer], reason: "GitHub from the terminal: PRs, issues, auth"}
+- {name: visual-studio-code, type: cask, tier: 1, categories: [developer], reason: "Widely used editor with a huge extension ecosystem"}
+- {name: iterm2, type: cask, tier: 2, categories: [developer], reason: "Feature-rich terminal with split panes and search"}
+- {name: bat, type: brew, tier: 2, categories: [developer], reason: "cat with syntax highlighting and git integration"}
+- {name: eza, type: brew, tier: 2, categories: [developer], reason: "Modern ls with git status and tree view"}
+- {name: git-delta, type: brew, tier: 2, categories: [developer], reason: "Readable side-by-side git diffs"}
+- {name: lazygit, type: brew, tier: 2, categories: [developer], reason: "Terminal UI for staging, rebasing and branches"}
+- {name: tmux, type: brew, tier: 2, categories: [developer], reason: "Persistent terminal sessions"}
+- {name: direnv, type: brew, tier: 2, categories: [developer], reason: "Per-project environment variables that load automatically"}
+- {name: mise, type: brew, tier: 2, categories: [developer], reason: "One tool for node/python/java/etc. version management"}
+- {name: uv, type: brew, tier: 2, categories: [developer], reason: "Fast Python package and project manager"}
+- {name: shellcheck, type: brew, tier: 2, categories: [developer], reason: "Catches common shell script bugs"}
+- {name: orbstack, type: cask, tier: 2, categories: [developer], reason: "Lightweight Docker and Linux VM runtime for macOS"}
+- {name: postman, type: cask, tier: 3, categories: [developer], reason: "GUI for exploring and testing HTTP APIs"}
+- {name: bruno, type: cask, tier: 3, categories: [developer], reason: "Git-friendly, offline API client"}
+- {name: proxyman, type: cask, tier: 3, categories: [developer], reason: "Inspect HTTP(S) traffic from apps and simulators"}
+- {name: tableplus, type: cask, tier: 3, categories: [developer], reason: "Native GUI for SQL databases"}
+- {name: btop, type: brew, tier: 3, categories: [developer], reason: "Resource monitor with a clear terminal UI"}
+- {name: zoxide, type: brew, tier: 3, categories: [developer], reason: "Smarter cd that learns your directories"}
+- {name: starship, type: brew, tier: 3, categories: [developer], reason: "Fast, configurable shell prompt"}
+- {name: scrcpy, type: brew, tier: 3, categories: [developer], reason: "Mirror and control an Android device over USB"}
+- {name: android-platform-tools, type: cask, tier: 3, categories: [developer], reason: "adb and fastboot without the full Android Studio install"}
+
+# ---- creative (photo / video / design) ------------------------------------
+- {name: exiftool, type: brew, tier: 1, categories: [creative], reason: "Read, write and batch-edit photo metadata"}
+- {name: ffmpeg, type: brew, tier: 1, categories: [creative], reason: "Convert, trim and transcode nearly any audio/video format"}
+- {name: imagemagick, type: brew, tier: 2, categories: [creative], reason: "Batch image conversion and resizing from the command line"}
+- {name: darktable, type: cask, tier: 2, categories: [creative], reason: "Free RAW developer and photo workflow tool"}
+- {name: rawtherapee, type: cask, tier: 3, categories: [creative], reason: "Free RAW converter with fine-grained controls"}
+- {name: gimp, type: cask, tier: 2, categories: [creative], reason: "Free raster image editor"}
+- {name: inkscape, type: cask, tier: 3, categories: [creative], reason: "Free vector graphics editor"}
+- {name: krita, type: cask, tier: 3, categories: [creative], reason: "Free painting and illustration app"}
+- {name: blender, type: cask, tier: 3, categories: [creative], reason: "3D modelling, animation and rendering"}
+- {name: obs, type: cask, tier: 3, categories: [creative], reason: "Screen and video recording or streaming"}
+- {name: imageoptim, type: cask, tier: 2, categories: [creative], reason: "Lossless image size reduction by drag and drop"}
+- {name: pngquant, type: brew, tier: 3, categories: [creative], reason: "Lossy PNG compression for the web"}
+- {name: yt-dlp, type: brew, tier: 3, categories: [creative], reason: "Download video and audio you have the right to save"}
+- {name: davinci-resolve, type: cask, tier: 3, categories: [creative], reason: "Professional video editing and colour grading (free tier)"}
+- {name: figma, type: cask, tier: 3, categories: [creative], reason: "Collaborative UI and design tool"}
+
+# ---- essentials ------------------------------------------------------------
+- {name: raycast, type: cask, tier: 1, categories: [essentials], reason: "Launcher with clipboard history, window management and extensions"}
+- {name: rectangle, type: cask, tier: 1, categories: [essentials], reason: "Keyboard-driven window snapping"}
+- {name: the-unarchiver, type: cask, tier: 2, categories: [essentials], reason: "Opens archive formats Finder does not"}
+- {name: appcleaner, type: cask, tier: 2, categories: [essentials], reason: "Removes apps together with their leftover files"}
+- {name: stats, type: cask, tier: 2, categories: [essentials], reason: "CPU, memory, disk and network in the menu bar"}
+- {name: maccy, type: cask, tier: 2, categories: [essentials], reason: "Lightweight clipboard history"}
+- {name: alt-tab, type: cask, tier: 3, categories: [essentials], reason: "Windows-style app switcher with previews"}
+- {name: monitorcontrol, type: cask, tier: 3, categories: [essentials], reason: "Control external monitor brightness and volume with keyboard keys"}
+- {name: karabiner-elements, type: cask, tier: 3, categories: [essentials], reason: "Powerful keyboard remapping"}
+- {name: iina, type: cask, tier: 3, categories: [essentials], reason: "Native video player with broad format support"}
+- {name: localsend, type: cask, tier: 3, categories: [essentials], reason: "AirDrop-style file sharing across platforms"}
+- {name: mas, type: brew, tier: 3, categories: [essentials], reason: "Install Mac App Store apps from the command line"}
