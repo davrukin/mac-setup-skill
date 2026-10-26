@@ -74,7 +74,7 @@ GitHub `blob` URLs are converted to raw URLs. Only simple `tap`/`brew`/`cask`/`m
 
 ## Privacy and safety
 
-- `data/presets.yaml` and `inventory.json` list everything the user has installed. `presets.yaml` is committed on purpose (it is how a new Mac gets the presets); `inventory.json`, generated Brewfiles and recommendation output are git-ignored. Suggest a private repo, or a review of `presets.yaml` before making it public.
+- `data/presets.yaml` and `data/inventory.json` list everything the user has installed. Both are committed on purpose: the user checks the repo out on the new Mac and the presets and inventory come with it. Generated Brewfiles (`data/brewfiles/`) and recommendation output are regenerated, not committed. Before the repo is shared publicly, scan both files for anything private (credentials, home paths, email addresses, employer or school specific tools) and ask the user about borderline app names.
 - LLM features send tool **names** to whichever provider `LLM_MODEL` points at. Say so before using `--ai`. API keys come from the environment only and are never written to disk.
 - Homebrew's installer is a remote script. `setup.sh` asks before running it; do not bypass that.
 
