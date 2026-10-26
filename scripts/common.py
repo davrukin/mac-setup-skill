@@ -177,6 +177,23 @@ def _token_set(subcommand: str) -> set[str] | None:
     return _TOKEN_CACHE[subcommand]
 
 
+def reset_token_cache() -> None:
+    """Forget cached `brew casks` / `brew formulae` results (after `brew update`)."""
+    global _CASK_INDEX, _CASK_INDEX_LOADED
+    _TOKEN_CACHE.clear()
+    _CASK_INDEX, _CASK_INDEX_LOADED = None, False
+
+
+def confirm(question: str) -> bool:
+    """Ask a yes/no question. MAC_SETUP_YES=1 (setup.sh --yes) answers yes; without a terminal the answer is no."""
+    if os.environ.get("MAC_SETUP_YES") == "1":
+        print(f"{question} [y/N] y (--yes)")
+        return True
+    if not sys.stdin.isatty():
+        return False
+    return input(f"{question} [y/N] ").strip().lower() in ("y", "yes")
+
+
 def available_casks() -> set[str] | None:
     """Every cask token Homebrew knows about, or None when brew is unavailable."""
     return _token_set("casks")

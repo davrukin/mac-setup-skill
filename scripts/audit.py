@@ -14,6 +14,7 @@ import json
 import os
 import plistlib
 import re
+import subprocess
 import sys
 import tempfile
 from datetime import date
@@ -176,16 +177,29 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
     }
 
 
+def repair_cask_list() -> set[str]:
+    """Homebrew's cask list is empty (its cached name file is missing). Offer `brew update`, which
+    rebuilds it, and re-check the count. Exits with instructions if the user declines or it stays empty."""
+    print("\n⚠️  Homebrew's cask list is empty (`brew casks` printed nothing). Without it, installed apps cannot be\n"
+          "   matched to casks and the inventory would be incomplete. `brew update` rebuilds the list.")
+    if not common.confirm("Run `brew update` now? (it refreshes Homebrew's own package data; nothing is installed)"):
+        sys.exit("Not updating. Run `brew update` yourself, check that `brew casks | wc -l` is in the thousands, then re-run.\n"
+                 "To continue anyway with partial data, add --allow-incomplete.")
+    if subprocess.run(["brew", "update"]).returncode != 0:
+        sys.exit("❌ `brew update` failed (see its output above). Fix that, then re-run.")
+    common.reset_token_cache()
+    known = common.available_casks()
+    print(f"🔎 `brew casks` now lists {len(known or ())} casks.")
+    if not known:
+        sys.exit("❌ The cask list is still empty after `brew update`. Try `brew doctor`, then re-run.")
+    return known
+
+
 def build_inventory(allow_incomplete: bool = False) -> dict:
     inv = collect_homebrew()
     known = common.available_casks()
     if known is None and common.have("brew") and not allow_incomplete:
-        sys.exit(
-            "❌ Homebrew's cask list is empty or missing (`brew casks` printed nothing), so installed apps\n"
-            "   cannot be matched to casks and the inventory would be incomplete.\n"
-            "   Fix: run `brew update` (it rebuilds the list), check that `brew casks | wc -l` is in the thousands,\n"
-            "   then run this again. To continue anyway with partial data, add --allow-incomplete."
-        )
+        known = repair_cask_list()
     if known is None:
         print("⚠️  Cannot list Homebrew casks here, so manually installed apps cannot be matched to casks.")
     index = common.cask_index() if known else None

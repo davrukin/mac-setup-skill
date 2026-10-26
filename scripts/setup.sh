@@ -104,7 +104,7 @@ menu() {
 ARGS=()
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    -y|--yes) YES=1 ;;
+    -y|--yes) YES=1; export MAC_SETUP_YES=1 ;;
     --with-ai) WITH_AI=1 ;;
     --new-run) export MAC_SETUP_DATA="${MAC_SETUP_DATA:-$ROOT/data}/runs/$(date +%Y-%m-%d_%H%M%S)" ;;
     --data-dir) [ "$#" -ge 2 ] || die "--data-dir needs a path."; export MAC_SETUP_DATA="$2"; shift ;;
