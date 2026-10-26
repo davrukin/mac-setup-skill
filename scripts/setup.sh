@@ -4,6 +4,7 @@
 #   setup.sh                    interactive menu
 #   setup.sh bootstrap          install Homebrew (asks first) and the Python environment
 #   setup.sh audit [args]       scan this Mac, write presets      (run on the OLD Mac)
+#   setup.sh game [args]        sort apps into categories, swipe-style  (= audit --game)
 #   setup.sh deploy [args]      preset -> Brewfile -> install     (run on the NEW Mac)
 #   setup.sh recommend [args]   tiered suggestions for a preset
 #   setup.sh presets <cmd>      list | show | import | export | delete
@@ -112,10 +113,11 @@ REST=(); [ "${#ARGS[@]}" -gt 1 ] && REST=("${ARGS[@]:1}")
 case "$CMD" in
   bootstrap) require_mac; ensure_brew; ensure_python; info "✅ Ready. Next: setup.sh audit (old Mac) or setup.sh deploy (new Mac)." ;;
   audit)     require_mac; ensure_python; run_py audit.py ${REST[@]+"${REST[@]}"} ;;
+  game)      require_mac; ensure_python; run_py audit.py --game ${REST[@]+"${REST[@]}"} ;;
   deploy)    require_mac; ensure_brew; ensure_python; run_py deploy.py ${REST[@]+"${REST[@]}"} ;;
   recommend) ensure_python; run_py recommend.py ${REST[@]+"${REST[@]}"} ;;
   presets)   ensure_python; run_py presets.py ${REST[@]+"${REST[@]}"} ;;
   menu)      ensure_python; menu ;;
-  -h|--help|help) sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
+  -h|--help|help) sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
   *) die "Unknown command '$CMD'. Try: setup.sh --help" ;;
 esac

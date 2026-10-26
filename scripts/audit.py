@@ -239,6 +239,14 @@ def choose_groups(inventory: dict, args) -> dict[str, dict]:
     if args.categorization:
         data = json.loads(Path(args.categorization).read_text(encoding="utf-8"))
         groups, warnings = categorize.from_grouping(data, inventory, "audit:assistant")
+    elif args.game:
+        import game  # imported lazily: game needs audit's helpers too
+
+        cats = [c.strip() for c in args.categories.split(",") if c.strip()]
+        data = game.play(inventory, cats, redo=args.redo, icon_mode=args.icons)
+        groups, warnings = categorize.from_grouping(data, inventory, "audit:game")
+        categorize.apply_shared(groups, inventory, use_rules=False)
+        return groups
     elif args.ai:
         if not ai_configured():
             print("⚠️  --ai needs LLM_MODEL set and litellm installed. Using built-in rules instead.")
@@ -260,6 +268,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ai", action="store_true", help="group tools with an LLM (needs LLM_MODEL; sends tool names to the provider)")
     ap.add_argument("--categorization", metavar="FILE", help="JSON grouping produced by an assistant, instead of rules/LLM")
+    ap.add_argument("--game", action="store_true", help="sort every installed item into categories in an interactive, swipe-style terminal game")
+    ap.add_argument("--categories", default="developer,common", help="game categories, comma-separated (default: developer,common)")
+    ap.add_argument("--redo", action="store_true", help="game: ignore saved choices and start over")
+    ap.add_argument("--icons", choices=["auto", "iterm", "kitty", "off"], default="auto", help="game: how to draw app icons")
     ap.add_argument("--inventory-only", action="store_true", help="write data/inventory.json and stop")
     ap.add_argument("--output", default=str(common.PRESETS_FILE), help="presets file to write (default: data/presets.yaml)")
     args = ap.parse_args()
