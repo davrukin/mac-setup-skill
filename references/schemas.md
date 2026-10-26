@@ -54,7 +54,7 @@ An assistant-written grouping. Group names are free-form; each becomes a preset.
 
 ## game_choices.json (`audit --game`)
 
-`{"choices": {"casks:figma": "common", "mas:497799835": "developer", "brews:jq": "skip"}}`. Keys are `<kind>:<name>` (App Store apps use the numeric id); values are a category name or `skip` (everything only). Items missing from the file are unsorted and stay in `current_system` only.
+`{"categories": {"developer": "d", "common": "c", "hobby": "h"}, "choices": {"casks:figma": "common", "mas:497799835": "developer", "brews:jq": "skip"}}`. `categories` maps each category to its hotkey (empty string for none), including ones created in the game. Choice keys are `<kind>:<name>` (App Store apps use the numeric id); values are a category name or `skip` (everything only). Items missing from the file are unsorted and stay in `current_system` only.
 
 ## web_recommendations.json
 
