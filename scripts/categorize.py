@@ -71,7 +71,7 @@ def heuristic(inventory: dict) -> dict[str, dict]:
     return groups
 
 
-def apply_shared(groups: dict[str, dict], inventory: dict) -> None:
+def apply_shared(groups: dict[str, dict], inventory: dict, use_rules: bool = True) -> None:
     """Make every `shared: true` preset from the rules file part of ALL presets.
 
     Runs after any grouping (built-in rules, an assistant's JSON, or an LLM) so the shared
@@ -79,7 +79,8 @@ def apply_shared(groups: dict[str, dict], inventory: dict) -> None:
     """
     rules = load_rules()
     shared = {n: r for n, r in rules.items() if r.get("shared")}
-    for name, rule in shared.items():
+    # use_rules=False (the sorting game): only the user's own picks fill the shared presets.
+    for name, rule in shared.items() if use_rules else []:
         base = groups.setdefault(name, common.empty_preset(rule.get("description", ""), "audit:shared"))
         for kind in ("brews", "casks"):
             found = [n for n in inventory.get(kind, []) if _matches(rule, kind, n)]
@@ -90,6 +91,7 @@ def apply_shared(groups: dict[str, dict], inventory: dict) -> None:
             if m["id"] not in have and any(re.search(p, m["name"]) for p in rule.get("mas_patterns") or [])
         ]
         base["taps"] = common.taps_needed(base)
+    shared = {n: r for n, r in shared.items() if n in groups}
     for name, group in list(groups.items()):
         if name in shared or name == "current_system":
             continue
@@ -99,7 +101,7 @@ def apply_shared(groups: dict[str, dict], inventory: dict) -> None:
             known = {m["id"] for m in group.get("mas") or []}
             group["mas"] = (group.get("mas") or []) + [m for m in groups[src].get("mas") or [] if m["id"] not in known]
         group["taps"] = common.taps_needed(group)
-    for name in [n for n in shared if not common.preset_size(groups[n])]:
+    for name in [n for n in shared if n in groups and not common.preset_size(groups[n])]:
         del groups[name]  # nothing from the shared list is installed here
 
 
