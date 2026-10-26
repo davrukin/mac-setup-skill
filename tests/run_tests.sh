@@ -126,6 +126,9 @@ import json;s=json.load(open('$TMP/game2/game_choices.json'));assert s['categori
 
 echo "== missing Homebrew cask list =="
 check "audit stops with a fix when brew's cask list is empty" bash -c "FAKE_BREW_NO_CASKS=1 MAC_SETUP_DATA='$TMP/nocasks' python3 '$SCRIPTS/audit.py' 2>&1 | grep -q 'brew update'; [ \${PIPESTATUS[0]} -ne 0 ]"
+mkdir -p "$TMP/state" && touch "$TMP/state/needs_update"
+check "without confirmation the audit does not run brew update" bash -c "FAKE_BREW_STATE='$TMP/state' MAC_SETUP_DATA='$TMP/repair' python3 '$SCRIPTS/audit.py' < /dev/null >/dev/null 2>&1; [ \$? -ne 0 ] && [ -e '$TMP/state/needs_update' ]"
+check "with --yes the audit runs brew update, rechecks and continues" bash -c "FAKE_BREW_STATE='$TMP/state' MAC_SETUP_YES=1 MAC_SETUP_DATA='$TMP/repair' python3 '$SCRIPTS/audit.py' | grep -q 'now lists' && [ ! -e '$TMP/state/needs_update' ] && test -f '$TMP/repair/presets.yaml'"
 check "--allow-incomplete continues anyway" bash -c "FAKE_BREW_NO_CASKS=1 MAC_SETUP_DATA='$TMP/nocasks' python3 '$SCRIPTS/audit.py' --allow-incomplete >/dev/null"
 
 echo "== presets import / list / export =="
