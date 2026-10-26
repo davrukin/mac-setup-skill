@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 # Stand-in for Homebrew used by tests/run_tests.sh. Never touches the real system.
 case "${1:-}" in
-  casks)    printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack; exit 0 ;;
+  casks)    printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack claude claude-code jetbrains-toolbox intellij-idea-ce darktable zoom; exit 0 ;;
+  info)
+    # `brew info --json=v2 --cask ...`: only the casks the audit tests care about.
+    cat <<'JSON'
+{"formulae": [], "casks": [
+ {"token": "iterm2", "deprecated": false, "disabled": false, "artifacts": [{"app": ["iTerm.app"]}]},
+ {"token": "claude", "deprecated": false, "disabled": false, "artifacts": [{"uninstall": [{"quit": ["com.anthropic.claudefordesktop"]}]}, {"app": ["Claude.app"]}]},
+ {"token": "claude-code", "deprecated": false, "disabled": false, "artifacts": [{"binary": ["claude"]}]},
+ {"token": "jetbrains-toolbox", "deprecated": false, "disabled": false, "artifacts": [{"app": ["JetBrains Toolbox.app"]}]},
+ {"token": "intellij-idea-ce", "deprecated": true, "disabled": false, "artifacts": [{"app": ["IntelliJ IDEA CE.app"]}]},
+ {"token": "darktable", "deprecated": false, "disabled": true, "artifacts": [{"app": ["darktable.app"]}]},
+ {"token": "zoom", "deprecated": false, "disabled": false, "artifacts": [{"uninstall": [{"signal": ["KILL", "us.zoom.xos"], "delete": ["/Applications/zoom.us.app"]}]}, {"pkg": ["zoom.pkg"]}]}
+]}
+JSON
+    exit 0 ;;
   formulae) printf '%s\n' git jq ripgrep fd fzf gh exiftool ffmpeg imagemagick wget mas bat eza; exit 0 ;;
   bundle)
     sub="${2:-}"
@@ -19,6 +33,7 @@ brew "someone/tools/mytool"
 cask "visual-studio-code"
 cask "iterm2"
 cask "figma"
+cask "claude-code"
 mas "Xcode", id: 497799835
 mas "Pixelmator Pro", id: 1289583905
 vscode "ms-python.python"

@@ -35,6 +35,10 @@ app("Visual Studio Code.app", "com.microsoft.VSCode")  # already managed by brew
 app("iTerm.app", "com.googlecode.iterm2")              # managed under a different token (iterm2)
 app("Weird Tool.app", "com.example.weird")             # no cask -> unmatched
 app("Adobe Thing/Adobe Thing.app", "com.example.adobe")  # nested folder, no cask -> unmatched
+app("Claude.app", "com.anthropic.claudefordesktop")    # `claude` cask; must not be swallowed by installed claude-code
+app("IntelliJ IDEA Community Edition.app", "com.jetbrains.intellij.ce")  # replaced by jetbrains-toolbox
+app("darktable.app", "org.darktable")                   # cask is disabled -> unmatched, never adopted
+app("zoom.us.app", "us.zoom.xos")                       # .pkg cask, matched via its uninstall stanza
 app("Safari.app", "com.apple.Safari")                  # Apple first-party -> skipped
 app("Xcode.app", "com.apple.dt.Xcode", mas=True)
 PY
@@ -49,8 +53,15 @@ import yaml;p=yaml.safe_load(open('$PRESETS'))['presets']['current_system'];asse
 check "no duplicate cask for managed apps (iterm, vscode)" py "
 import yaml;c=yaml.safe_load(open('$PRESETS'))['presets']['current_system']['casks'];assert sorted(c)==sorted(set(c));assert 'iterm' not in c and 'visual-studio-code' in c and c.count('iterm2')==1"
 check "unmatched apps reported, not guessed into casks" py "
-import json,yaml;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert set(i['unmatched_apps'])=={'Weird Tool','Adobe Thing'},i['unmatched_apps']
+import json,yaml;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert set(i['unmatched_apps'])=={'Weird Tool','Adobe Thing','darktable'},i['unmatched_apps']
 c=yaml.safe_load(open('$PRESETS'))['presets']['current_system']['casks'];assert 'weird-tool' not in c and 'safari' not in c"
+check "apps are matched through Homebrew metadata, not name guessing" py "
+import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));c=i['casks'];assert 'claude' in c and 'claude-code' in c and 'zoom' in c,c;assert 'darktable' not in c"
+check "JetBrains apps are replaced by jetbrains-toolbox" py "
+import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert 'jetbrains-toolbox' in i['casks'] and 'intellij-idea-ce' not in i['casks'];assert i['consolidated']=={'jetbrains-toolbox':['IntelliJ IDEA Community Edition']},i['consolidated']"
+check "shared base preset (claude, figma) is merged into every role preset" py "
+import yaml;P=yaml.safe_load(open('$PRESETS'))['presets']
+for n in ('developer','creative','base'): assert {'claude','figma'}<=set(P[n]['casks']),n"
 check "Apple apps skipped, MAS app comes from mas list" py "
 import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert i['apple_apps_skipped']>=1;assert {m['id'] for m in i['mas']}=={497799835,1289583905}"
 check "developer preset has editor, terminal, extension, tap" py "
@@ -66,7 +77,9 @@ cat > "$TMP/group.json" <<'JSON'
 JSON
 python3 "$SCRIPTS/audit.py" --categorization "$TMP/group.json" > "$TMP/group.out"
 check "custom group created" py "
-import yaml;p=yaml.safe_load(open('$PRESETS'))['presets']['photo'];assert p['casks']==['figma'] and p['mas'][0]['id']==1289583905"
+import yaml;p=yaml.safe_load(open('$PRESETS'))['presets']['photo'];assert 'figma' in p['casks'] and 'hallucinated-app' not in p['casks'] and p['mas'][0]['id']==1289583905"
+check "shared base is added to assistant-made groups too" py "
+import yaml;P=yaml.safe_load(open('$PRESETS'))['presets'];assert {'claude','figma'}<=set(P['photo']['casks']);assert 'base' in P"
 check "hallucinated items dropped with a warning" grep -q "hallucinated-app" "$TMP/group.out"
 
 echo "== presets import / list / export =="
