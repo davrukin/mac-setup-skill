@@ -150,6 +150,8 @@ check "brew bundle install invoked" grep -q "fake brew: bundle install" "$TMP/ru
 check "non-interactive run without --preset fails clearly" bash -c "! python3 '$SCRIPTS/deploy.py' < /dev/null 2>'$TMP/err.out' && grep -q -- '--preset' '$TMP/err.out'"
 
 echo "== launcher =="
+check "--new-run audits into its own dated folder" bash -c "bash '$SCRIPTS/setup.sh' --new-run audit >/dev/null && ls -d '$MAC_SETUP_DATA'/runs/????-??-??_?????? | head -1 | xargs -I{} test -f {}/presets.yaml"
+check "--data-dir uses the given folder" bash -c "bash '$SCRIPTS/setup.sh' --data-dir '$TMP/custom' audit >/dev/null && test -f '$TMP/custom/inventory.json'"
 check "setup.sh --help works" bash "$SCRIPTS/setup.sh" --help
 check "setup.sh presets list routes to python" bash -c "bash '$SCRIPTS/setup.sh' presets list | grep -q current_system"
 check "setup.sh refuses unknown command" bash -c "! bash '$SCRIPTS/setup.sh' nonsense"

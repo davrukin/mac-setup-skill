@@ -10,6 +10,8 @@
 #   setup.sh presets <cmd>      list | show | import | export | delete
 #
 # Flags: -y/--yes  skip confirmation prompts.   --with-ai  install litellm for LLM features.
+#        --new-run  keep this run in its own folder, data/runs/YYYY-MM-DD_HHMMSS (fresh start, nothing reused).
+#        --data-dir PATH  use PATH instead of data/ (reuse the same PATH later for deploy, presets, recommend).
 # Env:   MAC_SETUP_SKIP_VENV=1  use the system python3 instead of creating .venv (tests, CI).
 set -euo pipefail
 
@@ -100,13 +102,20 @@ menu() {
 
 # ---- argument handling -----------------------------------------------------
 ARGS=()
-for a in ${@+"$@"}; do
-  case "$a" in
+while [ "$#" -gt 0 ]; do
+  case "$1" in
     -y|--yes) YES=1 ;;
     --with-ai) WITH_AI=1 ;;
-    *) ARGS+=("$a") ;;
+    --new-run) export MAC_SETUP_DATA="${MAC_SETUP_DATA:-$ROOT/data}/runs/$(date +%Y-%m-%d_%H%M%S)" ;;
+    --data-dir) [ "$#" -ge 2 ] || die "--data-dir needs a path."; export MAC_SETUP_DATA="$2"; shift ;;
+    *) ARGS+=("$1") ;;
   esac
+  shift
 done
+if [ -n "${MAC_SETUP_DATA:-}" ]; then
+  mkdir -p "$MAC_SETUP_DATA"
+  info "📁 Using data folder: $MAC_SETUP_DATA"
+fi
 CMD="${ARGS[0]:-menu}"
 REST=(); [ "${#ARGS[@]}" -gt 1 ] && REST=("${ARGS[@]:1}")
 
@@ -118,6 +127,6 @@ case "$CMD" in
   recommend) ensure_python; run_py recommend.py ${REST[@]+"${REST[@]}"} ;;
   presets)   ensure_python; run_py presets.py ${REST[@]+"${REST[@]}"} ;;
   menu)      ensure_python; menu ;;
-  -h|--help|help) sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
+  -h|--help|help) sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
   *) die "Unknown command '$CMD'. Try: setup.sh --help" ;;
 esac
