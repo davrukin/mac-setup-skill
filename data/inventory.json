@@ -1,0 +1,724 @@
+{
+  "generated": "2026-10-26",
+  "taps": [
+    "apple/apple",
+    "teamookla/speedtest"
+  ],
+  "brews": [
+    "ata",
+    "cocoapods",
+    "cpdf",
+    "djvulibre",
+    "exiftool",
+    "f3",
+    "ffmpeg",
+    "ffmpeg-full",
+    "gh",
+    "git",
+    "git-filter-repo",
+    "git-lfs",
+    "glib",
+    "go",
+    "gobject-introspection",
+    "gocr",
+    "golangci-lint",
+    "gtk+",
+    "harfbuzz",
+    "imagemagick",
+    "leptonica",
+    "llvm@17",
+    "mas",
+    "mpv",
+    "mupdf",
+    "node",
+    "ollama",
+    "pandoc",
+    "pango",
+    "photocraft-cli",
+    "pipx",
+    "poppler",
+    "pyenv",
+    "python-tk@3.13",
+    "python@3.12",
+    "rename",
+    "smartmontools",
+    "swift-format",
+    "teamookla/speedtest/speedtest",
+    "telnet",
+    "tmux",
+    "tree",
+    "typst",
+    "uv",
+    "virtualenv",
+    "youtube-dl",
+    "yt-dlp"
+  ],
+  "casks": [
+    "affinity",
+    "affinity-photo",
+    "altserver",
+    "android-studio",
+    "ankerwork",
+    "antigravity-cli",
+    "antigravity-ide",
+    "artcraft",
+    "audacity",
+    "balenaetcher",
+    "bartender",
+    "betterdisplay",
+    "bettertouchtool",
+    "boom-3d",
+    "burn",
+    "cadcraft",
+    "caffeine",
+    "calibre",
+    "chatgpt",
+    "claude-code",
+    "cleanmymac",
+    "clickup",
+    "clipgrab",
+    "coconutbattery",
+    "crossover",
+    "cursor",
+    "darktable",
+    "db-browser-for-sqlite",
+    "ddpm",
+    "deckcraft",
+    "designcraft",
+    "devutils",
+    "digikam",
+    "disk-drill",
+    "effectcraft",
+    "figma",
+    "filmcraft",
+    "firefox",
+    "flutter",
+    "focusrite-control-2",
+    "fujifilm-x-raw-studio",
+    "gb-studio",
+    "gemini",
+    "gimp",
+    "gnucash",
+    "godspeed",
+    "gog-galaxy",
+    "google-chrome",
+    "google-drive",
+    "gridcraft",
+    "handbrake-app",
+    "jetbrains-toolbox",
+    "libreoffice",
+    "lightcraft",
+    "lm-studio",
+    "macdown",
+    "macs-fan-control",
+    "macwhisper",
+    "makemkv",
+    "marked-app",
+    "mediainfo",
+    "messenger",
+    "meta",
+    "metaimage",
+    "microsoft-edge",
+    "microsoft-excel",
+    "microsoft-onenote",
+    "microsoft-outlook",
+    "microsoft-powerpoint",
+    "microsoft-word",
+    "mimestream",
+    "modern-csv",
+    "motion",
+    "netspot",
+    "nordvpn",
+    "notion",
+    "notion-calendar",
+    "obsidian",
+    "old-school-runescape",
+    "onedrive",
+    "onyx",
+    "openemu",
+    "opera",
+    "pacifist",
+    "parallels-toolbox",
+    "pdf-expert",
+    "pdfcraft",
+    "photocraft",
+    "photosrevive",
+    "plaud",
+    "prizmo",
+    "proxyman",
+    "quicken",
+    "rawtherapee",
+    "receipts",
+    "remember-the-milk",
+    "runescape",
+    "setapp",
+    "shutter-encoder",
+    "sigmaos",
+    "sketch",
+    "slack",
+    "soulver",
+    "soundcraft",
+    "sourcetree",
+    "spotify",
+    "steam",
+    "stillcolor",
+    "superwhisper",
+    "swift-publisher",
+    "taphouse",
+    "textmate",
+    "tidal",
+    "transmission",
+    "typora",
+    "upscayl",
+    "vectorcraft",
+    "visual-studio-code",
+    "vivaldi",
+    "vlc",
+    "vsee",
+    "warp",
+    "wifi-explorer",
+    "winzip",
+    "wordcraft",
+    "xnviewmp",
+    "zed",
+    "zen",
+    "zenmap",
+    "zeplin",
+    "zotero"
+  ],
+  "mas": [
+    {
+      "name": "Agenda",
+      "id": 1287445660
+    },
+    {
+      "name": "Air Twister",
+      "id": 1555621822
+    },
+    {
+      "name": "Algorithms & Data Structures",
+      "id": 1498349698
+    },
+    {
+      "name": "Blackmagic Disk Speed Test",
+      "id": 425264550
+    },
+    {
+      "name": "Brother iPrint&Scan",
+      "id": 1193539993
+    },
+    {
+      "name": "Capital One Shopping",
+      "id": 1477110326
+    },
+    {
+      "name": "Cashculator",
+      "id": 1591642644
+    },
+    {
+      "name": "Chronicle",
+      "id": 572561420
+    },
+    {
+      "name": "Cityscapes",
+      "id": 1631153096
+    },
+    {
+      "name": "Compressor",
+      "id": 424390742
+    },
+    {
+      "name": "DaVinci Resolve",
+      "id": 571213070
+    },
+    {
+      "name": "Deliveries",
+      "id": 290986013
+    },
+    {
+      "name": "DevCleaner",
+      "id": 1388020431
+    },
+    {
+      "name": "Developer",
+      "id": 640199958
+    },
+    {
+      "name": "Fabula",
+      "id": 1591155142
+    },
+    {
+      "name": "Farm It!",
+      "id": 1538476446
+    },
+    {
+      "name": "Final Cut Pro",
+      "id": 1631624924
+    },
+    {
+      "name": "Flighty",
+      "id": 1358823008
+    },
+    {
+      "name": "GarageBand",
+      "id": 682658836
+    },
+    {
+      "name": "GoPro Player",
+      "id": 1460836908
+    },
+    {
+      "name": "GoPro Quik",
+      "id": 561350520
+    },
+    {
+      "name": "Grazie",
+      "id": 6450955215
+    },
+    {
+      "name": "Ground News",
+      "id": 1324203419
+    },
+    {
+      "name": "Hitchhiker - A Mystery Game",
+      "id": 1455534343
+    },
+    {
+      "name": "iBooks Author",
+      "id": 490152466
+    },
+    {
+      "name": "iMovie",
+      "id": 408981434
+    },
+    {
+      "name": "inRoute",
+      "id": 1476902521
+    },
+    {
+      "name": "Judo",
+      "id": 1564578427
+    },
+    {
+      "name": "Keynote",
+      "id": 409183694
+    },
+    {
+      "name": "Keynote",
+      "id": 361285480
+    },
+    {
+      "name": "Kindle",
+      "id": 302584613
+    },
+    {
+      "name": "LiquidText",
+      "id": 922765270
+    },
+    {
+      "name": "Logic Pro",
+      "id": 634148309
+    },
+    {
+      "name": "MainStage",
+      "id": 634159523
+    },
+    {
+      "name": "Mela",
+      "id": 1568924476
+    },
+    {
+      "name": "Mini Motorways",
+      "id": 1456188526
+    },
+    {
+      "name": "monday.com",
+      "id": 1298450641
+    },
+    {
+      "name": "Nitro",
+      "id": 1591292532
+    },
+    {
+      "name": "Numbers",
+      "id": 409203825
+    },
+    {
+      "name": "Numbers",
+      "id": 361304891
+    },
+    {
+      "name": "OpenBudget",
+      "id": 1526973735
+    },
+    {
+      "name": "Outlanders",
+      "id": 1468558187
+    },
+    {
+      "name": "Pages",
+      "id": 409201541
+    },
+    {
+      "name": "Pages",
+      "id": 361309726
+    },
+    {
+      "name": "Parcel Classic",
+      "id": 639968404
+    },
+    {
+      "name": "PDFgear",
+      "id": 6469021132
+    },
+    {
+      "name": "Perplexity",
+      "id": 6714467650
+    },
+    {
+      "name": "Photomator",
+      "id": 1444636541
+    },
+    {
+      "name": "Pixelmator Pro",
+      "id": 6746662575
+    },
+    {
+      "name": "Planny",
+      "id": 6692634891
+    },
+    {
+      "name": "Poolsuite FM",
+      "id": 1514817810
+    },
+    {
+      "name": "Prime Video",
+      "id": 545519333
+    },
+    {
+      "name": "reignsbeyond",
+      "id": 1516293234
+    },
+    {
+      "name": "Rosetta Stone Learn Languages",
+      "id": 1476088902
+    },
+    {
+      "name": "Samorost 3+",
+      "id": 1611529849
+    },
+    {
+      "name": "SnippetsLab",
+      "id": 1006087419
+    },
+    {
+      "name": "Swift Playground",
+      "id": 1496833156
+    },
+    {
+      "name": "System Designer",
+      "id": 1102494854
+    },
+    {
+      "name": "The Unarchiver",
+      "id": 425424353
+    },
+    {
+      "name": "TheOregonTrail",
+      "id": 1502228492
+    },
+    {
+      "name": "TickTick",
+      "id": 966085870
+    },
+    {
+      "name": "Todoist",
+      "id": 585829637
+    },
+    {
+      "name": "Under My Roof",
+      "id": 1524335878
+    },
+    {
+      "name": "Universe",
+      "id": 1211437633
+    },
+    {
+      "name": "Vulcan",
+      "id": 1533712040
+    },
+    {
+      "name": "WhatsApp",
+      "id": 310633997
+    },
+    {
+      "name": "WhatsApp (old)",
+      "id": 1147396723
+    },
+    {
+      "name": "Xcode",
+      "id": 497799835
+    },
+    {
+      "name": "Zookeeper World",
+      "id": 1370858242
+    }
+  ],
+  "vscode": [],
+  "adopted_casks": [
+    "affinity",
+    "affinity-photo",
+    "altserver",
+    "android-studio",
+    "ankerwork",
+    "antigravity-ide",
+    "audacity",
+    "balenaetcher",
+    "bartender",
+    "betterdisplay",
+    "bettertouchtool",
+    "boom-3d",
+    "burn",
+    "caffeine",
+    "calibre",
+    "chatgpt",
+    "cleanmymac",
+    "clickup",
+    "clipgrab",
+    "coconutbattery",
+    "crossover",
+    "cursor",
+    "darktable",
+    "ddpm",
+    "devutils",
+    "digikam",
+    "disk-drill",
+    "figma",
+    "firefox",
+    "focusrite-control-2",
+    "fujifilm-x-raw-studio",
+    "gb-studio",
+    "gimp",
+    "gnucash",
+    "godspeed",
+    "gog-galaxy",
+    "google-chrome",
+    "google-drive",
+    "handbrake-app",
+    "jetbrains-toolbox",
+    "lm-studio",
+    "macdown",
+    "macs-fan-control",
+    "macwhisper",
+    "makemkv",
+    "marked-app",
+    "mediainfo",
+    "messenger",
+    "meta",
+    "metaimage",
+    "microsoft-edge",
+    "microsoft-excel",
+    "microsoft-onenote",
+    "microsoft-outlook",
+    "microsoft-powerpoint",
+    "microsoft-word",
+    "mimestream",
+    "motion",
+    "netspot",
+    "nordvpn",
+    "notion",
+    "notion-calendar",
+    "obsidian",
+    "old-school-runescape",
+    "onedrive",
+    "onyx",
+    "openemu",
+    "pacifist",
+    "parallels-toolbox",
+    "pdf-expert",
+    "photosrevive",
+    "plaud",
+    "prizmo",
+    "proxyman",
+    "quicken",
+    "rawtherapee",
+    "receipts",
+    "remember-the-milk",
+    "runescape",
+    "setapp",
+    "shutter-encoder",
+    "sigmaos",
+    "sketch",
+    "slack",
+    "soulver",
+    "sourcetree",
+    "spotify",
+    "steam",
+    "stillcolor",
+    "superwhisper",
+    "swift-publisher",
+    "textmate",
+    "tidal",
+    "transmission",
+    "typora",
+    "visual-studio-code",
+    "vlc",
+    "vsee",
+    "warp",
+    "wifi-explorer",
+    "winzip",
+    "xnviewmp",
+    "zed",
+    "zen",
+    "zenmap",
+    "zeplin",
+    "zotero"
+  ],
+  "unmatched_apps": [
+    "Adobe Lightroom",
+    "Adobe Lightroom Classic",
+    "Adobe Photoshop 2026",
+    "AetherSX2",
+    "AlDente Pro",
+    "AnyTrans",
+    "Arduino",
+    "armsx2",
+    "Bitburner",
+    "Blackmagic Proxy Generator Lite",
+    "Blackmagic RAW Player",
+    "Blackmagic RAW Speed Test",
+    "Blackmagic Remote Monitor",
+    "Brave Browser Beta",
+    "CalDigit_Docking_Station_Utility",
+    "CameraBag Pro",
+    "Capture One",
+    "Chromebook Recovery Utility",
+    "Cities Skylines",
+    "College Bound",
+    "Corel AfterShot Pro 3 (64-bit)",
+    "Counter-Strike Global Offensive",
+    "Daily Budget",
+    "DaVinci Control Panels Setup",
+    "DaVinci Resolve",
+    "DiRT 4",
+    "DxO FilmPack 8",
+    "DXOPhotoLab9",
+    "eBay",
+    "Edit",
+    "Epic Games Launcher",
+    "Fairlight Studio Utility",
+    "Filmage Editor",
+    "Flinto",
+    "Fly Dangerous",
+    "GitHub Desktop",
+    "Google Chrome Beta",
+    "Google Docs",
+    "Google Sheets",
+    "Google Slides",
+    "Graphwar",
+    "iBoysoft NTFS for Mac",
+    "IDLE",
+    "Imaging Edge Desktop",
+    "IntelliJ IDEA Community Edition",
+    "JoyTap",
+    "Luminar",
+    "Luminar Neo",
+    "Merlin Project Express",
+    "Microsoft Defender Shim",
+    "Microsoft Teams classic",
+    "MobileTrans",
+    "MonsterWriter",
+    "Navigation Updater",
+    "net.downloadhelper.coapp",
+    "OM Workspace",
+    "ON1 Photo RAW 2025",
+    "ON1 Photo RAW 2026",
+    "OpenSCAD-2021.01",
+    "Pack, Repeat",
+    "Painter Essentials 7",
+    "Parallels Desktop",
+    "Playback",
+    "Python Launcher",
+    "RAW FILE CONVERTER EX 3.0 powered by SILKYPIX",
+    "Remote",
+    "RemotePlay",
+    "SamsungPortableSSD_1.0",
+    "showfoto",
+    "SimplePlanes",
+    "Superfocus",
+    "Task Manager TMOG",
+    "Taskheat",
+    "TeslaTunes",
+    "Theme Hospital",
+    "Theme Park",
+    "Toast Express",
+    "Today's Budget",
+    "TouchRetouch",
+    "TripIt",
+    "Tripsy",
+    "uniFLOW SmartClient",
+    "Uninstall Navigation Updater",
+    "Uninstall Resolve",
+    "Viewer",
+    "Visual Studio (Preview)",
+    "WaveSpeed Desktop",
+    "Whiteboard",
+    "Xamarin Profiler",
+    "YouTube",
+    "zoom.us"
+  ],
+  "mas_apps_seen": [
+    "Agenda",
+    "Air Twister",
+    "Algorithms & Data Structures",
+    "Amazon Kindle",
+    "Blackmagic Disk Speed Test",
+    "Brother iPrint&Scan",
+    "Capital One Shopping",
+    "Cashculator",
+    "Chronicle",
+    "Cityscapes",
+    "Deliveries",
+    "DevCleaner",
+    "Developer",
+    "Fabula",
+    "Farm It!",
+    "Flighty",
+    "GoPro Player",
+    "GoPro Quik",
+    "Grazie",
+    "Ground News",
+    "Hitchhiker",
+    "inRoute",
+    "Judo",
+    "LiquidText",
+    "Mela",
+    "Mini Motorways",
+    "monday.com",
+    "Nitro",
+    "OpenBudget",
+    "Outlanders",
+    "Parcel Classic",
+    "PDFgear",
+    "Perplexity",
+    "Photomator",
+    "Planny",
+    "Poolsuite FM",
+    "Prime Video",
+    "reignsbeyond",
+    "Rosetta Stone Learn Languages",
+    "Samorost 3+",
+    "SnippetsLab",
+    "System Designer",
+    "The Unarchiver",
+    "TheOregonTrail",
+    "TickTick",
+    "Todoist",
+    "Under My Roof",
+    "Universe\u200b",
+    "Vulcan",
+    "WhatsApp",
+    "Zookeeper World"
+  ],
+  "apple_apps_skipped": 27
+}
