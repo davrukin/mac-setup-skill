@@ -52,6 +52,10 @@ An assistant-written grouping. Group names are free-form; each becomes a preset.
 }
 ```
 
+## game_choices.json (`audit --game`)
+
+`{"choices": {"casks:figma": "common", "mas:497799835": "developer", "brews:jq": "skip"}}`. Keys are `<kind>:<name>` (App Store apps use the numeric id); values are a category name or `skip` (everything only). Items missing from the file are unsorted and stay in `current_system` only.
+
 ## web_recommendations.json
 
 Written by an assistant after online research; read by `recommend.py` (default path `data/web_recommendations.json`).

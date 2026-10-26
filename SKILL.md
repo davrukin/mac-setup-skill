@@ -27,11 +27,14 @@ scripts/setup.sh audit                       # built-in rules, no network, no AI
 scripts/setup.sh audit --inventory-only      # just data/inventory.json, so you can do the grouping
 scripts/setup.sh audit --categorization group.json   # your grouping (shape: references/schemas.md)
 scripts/setup.sh audit --ai                  # LLM grouping; needs LLM_MODEL, sends tool names to that provider
+scripts/setup.sh game                        # sort everything yourself in an interactive, swipe-style terminal game
 ```
 
 What it collects: Homebrew formulae, casks and taps (via `brew bundle dump`), Mac App Store apps, VS Code extensions, and apps in `/Applications` and `~/Applications`. A manually installed app is only added when a real cask exists for it. Everything else lands in `unmatched_apps` in `data/inventory.json` because guessing a cask name from an app name produces Brewfile lines that fail on the new Mac.
 
 Output: `data/presets.yaml` with `current_system` (everything) plus role presets such as `developer`, `creative`, `essentials`.
+
+**Sorting game (`setup.sh game`, same as `audit --game`).** The user steps through every installed app, tool and App Store app. Everything is always in `current_system` ("everything"); each card suggests a colour-coded category from the built-in rules and the user picks `developer`, `common` (merged into every preset) or `everything only` with arrow keys, number keys or Enter to accept the suggestion. App icons are drawn in iTerm2, WezTerm, kitty and Ghostty (`--icons off` disables them). Add categories with `--categories developer,common,creative`. Progress is saved to `data/game_choices.json`, so the game can be stopped and resumed (`--redo` starts over). It needs a real terminal, so give the user the command rather than running it yourself.
 
 The `shared: true` preset in `references/categories.yaml` (`common`: Claude, Claude Code, Figma) is added to every role preset after grouping, whichever way the grouping was made (built-in rules, `--categorization` or `--ai`), so do not worry about including those items in your own grouping. App-to-cask matching uses Homebrew's cask metadata (app names and bundle ids), and families listed under `consolidate:` (JetBrains IDEs and Android Studio) are replaced by their launcher cask (`jetbrains-toolbox`).
 
