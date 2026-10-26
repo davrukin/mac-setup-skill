@@ -250,7 +250,8 @@ def choose_groups(inventory: dict, args) -> dict[str, dict]:
         import game  # imported lazily: game needs audit's helpers too
 
         cats = [c.strip() for c in args.categories.split(",") if c.strip()]
-        data = game.play(inventory, cats, redo=args.redo, icon_mode=args.icons)
+        data = game.play(inventory, cats, redo=args.redo, icon_mode=args.icons,
+                         include_deps=args.include_dependencies)
         groups, warnings = categorize.from_grouping(data, inventory, "audit:game")
         categorize.apply_shared(groups, inventory, use_rules=False)
         return groups
@@ -278,6 +279,7 @@ def main() -> None:
     ap.add_argument("--game", action="store_true", help="sort every installed item into categories in an interactive, swipe-style terminal game")
     ap.add_argument("--categories", default="developer,common", help="game categories, comma-separated (default: developer,common)")
     ap.add_argument("--redo", action="store_true", help="game: ignore saved choices and start over")
+    ap.add_argument("--include-dependencies", action="store_true", help="game: also ask about tools that are only installed as dependencies")
     ap.add_argument("--icons", choices=["auto", "iterm", "kitty", "off"], default="auto", help="game: how to draw app icons")
     ap.add_argument("--allow-incomplete", action="store_true", help="continue even if Homebrew's cask list is unavailable (apps will not be matched to casks)")
     ap.add_argument("--inventory-only", action="store_true", help="write data/inventory.json and stop")
