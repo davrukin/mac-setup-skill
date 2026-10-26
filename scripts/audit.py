@@ -226,7 +226,7 @@ Brews: {inventory['brews']}
 Mac App Store apps: {mas_names}
 VS Code extensions: {inventory['vscode']}
 
-Use ONLY items from the lists above, exactly as written (the shared "base" tools are added to every group automatically); an item may appear in several groups.
+Use ONLY items from the lists above, exactly as written (the shared "common" tools are added to every group automatically); an item may appear in several groups.
 Groups: "developer" (software engineering), "creative" (design, photo, video, audio), "essentials" (productivity and system utilities).
 Respond ONLY with a JSON object of this shape:
 {{"developer": {{"casks": [], "brews": [], "mas": [], "vscode": []}}, "creative": {{...}}, "essentials": {{...}}}}
@@ -249,7 +249,7 @@ def choose_groups(inventory: dict, args) -> dict[str, dict]:
                 print("✅ AI grouping applied (unknown items dropped).")
     if not groups:
         groups = categorize.heuristic(inventory)
-    categorize.apply_shared(groups, inventory)  # the shared base goes into every preset, however they were grouped
+    categorize.apply_shared(groups, inventory)  # the shared `common` preset goes into every preset, however they were grouped
     for w in warnings:
         print(f"⚠️  {w}")
     return groups

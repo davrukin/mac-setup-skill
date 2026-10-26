@@ -75,7 +75,7 @@ def apply_shared(groups: dict[str, dict], inventory: dict) -> None:
     """Make every `shared: true` preset from the rules file part of ALL presets.
 
     Runs after any grouping (built-in rules, an assistant's JSON, or an LLM) so the shared
-    base is never left to the grouper. Only items that are really in the inventory are added.
+    the common set is never left to the grouper. Only items that are really in the inventory are added.
     """
     rules = load_rules()
     shared = {n: r for n, r in rules.items() if r.get("shared")}

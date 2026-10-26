@@ -4,8 +4,8 @@
 # mas_patterns are matched against Mac App Store app names.
 presets:
   # `shared: true` presets are merged into every other preset, so each preset is
-  # self-contained when deployed on its own (and still listed separately as `base`).
-  base:
+  # self-contained when deployed on its own (and still listed separately as `common`).
+  common:
     description: Tools every Mac gets, whatever its role
     shared: true
     casks:

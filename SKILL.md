@@ -33,7 +33,7 @@ What it collects: Homebrew formulae, casks and taps (via `brew bundle dump`), Ma
 
 Output: `data/presets.yaml` with `current_system` (everything) plus role presets such as `developer`, `creative`, `essentials`.
 
-The `shared: true` preset in `references/categories.yaml` (`base`: Claude, Claude Code, Figma) is added to every role preset after grouping, whichever way the grouping was made (built-in rules, `--categorization` or `--ai`), so do not worry about including those items in your own grouping. App-to-cask matching uses Homebrew's cask metadata (app names and bundle ids), and families listed under `consolidate:` (JetBrains IDEs and Android Studio) are replaced by their launcher cask (`jetbrains-toolbox`).
+The `shared: true` preset in `references/categories.yaml` (`common`: Claude, Claude Code, Figma) is added to every role preset after grouping, whichever way the grouping was made (built-in rules, `--categorization` or `--ai`), so do not worry about including those items in your own grouping. App-to-cask matching uses Homebrew's cask metadata (app names and bundle ids), and families listed under `consolidate:` (JetBrains IDEs and Android Studio) are replaced by their launcher cask (`jetbrains-toolbox`).
 
 **Best result without an API key:** run `--inventory-only`, read `data/inventory.json`, write a grouping that reflects what this person actually does (a staff Android engineer who shoots film needs different presets than a web developer), save it as JSON, and run `--categorization`. Unknown items are dropped automatically, so a slip cannot put a non-existent package in a preset. Tell the user how many items were dropped and why.
 
