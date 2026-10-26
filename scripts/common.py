@@ -170,7 +170,10 @@ _TOKEN_CACHE: dict[str, set[str] | None] = {}
 def _token_set(subcommand: str) -> set[str] | None:
     if subcommand not in _TOKEN_CACHE:
         out = run(["brew", subcommand])
-        _TOKEN_CACHE[subcommand] = None if out is None else {l.strip() for l in out.splitlines() if l.strip()}
+        tokens = None if out is None else {l.strip() for l in out.splitlines() if l.strip()}
+        # An empty list means Homebrew's cached name file is missing (`brew casks` then prints a
+        # blank line); treat it as unavailable rather than as "no casks exist".
+        _TOKEN_CACHE[subcommand] = tokens or None
     return _TOKEN_CACHE[subcommand]
 
 

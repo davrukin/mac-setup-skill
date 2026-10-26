@@ -176,9 +176,16 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
     }
 
 
-def build_inventory() -> dict:
+def build_inventory(allow_incomplete: bool = False) -> dict:
     inv = collect_homebrew()
     known = common.available_casks()
+    if known is None and common.have("brew") and not allow_incomplete:
+        sys.exit(
+            "❌ Homebrew's cask list is empty or missing (`brew casks` printed nothing), so installed apps\n"
+            "   cannot be matched to casks and the inventory would be incomplete.\n"
+            "   Fix: run `brew update` (it rebuilds the list), check that `brew casks | wc -l` is in the thousands,\n"
+            "   then run this again. To continue anyway with partial data, add --allow-incomplete."
+        )
     if known is None:
         print("⚠️  Cannot list Homebrew casks here, so manually installed apps cannot be matched to casks.")
     index = common.cask_index() if known else None
@@ -272,13 +279,14 @@ def main() -> None:
     ap.add_argument("--categories", default="developer,common", help="game categories, comma-separated (default: developer,common)")
     ap.add_argument("--redo", action="store_true", help="game: ignore saved choices and start over")
     ap.add_argument("--icons", choices=["auto", "iterm", "kitty", "off"], default="auto", help="game: how to draw app icons")
+    ap.add_argument("--allow-incomplete", action="store_true", help="continue even if Homebrew's cask list is unavailable (apps will not be matched to casks)")
     ap.add_argument("--inventory-only", action="store_true", help="write data/inventory.json and stop")
     ap.add_argument("--output", default=str(common.PRESETS_FILE), help="presets file to write (default: data/presets.yaml)")
     args = ap.parse_args()
 
     common.DATA_DIR.mkdir(parents=True, exist_ok=True)
     print("🔍 Auditing this Mac...")
-    inventory = build_inventory()
+    inventory = build_inventory(args.allow_incomplete)
     common.INVENTORY_FILE.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
     print(
         f"✅ {len(inventory['casks'])} apps (casks), {len(inventory['brews'])} CLI tools, "

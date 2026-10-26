@@ -112,6 +112,10 @@ MAC_SETUP_DATA="$TMP/game2" MAC_SETUP_GAME_KEYS="q" python3 "$SCRIPTS/audit.py" 
 check "categories made in-game are remembered on the next run" py "
 import json;s=json.load(open('$TMP/game2/game_choices.json'));assert s['categories']['creative']=='r'"
 
+echo "== missing Homebrew cask list =="
+check "audit stops with a fix when brew's cask list is empty" bash -c "FAKE_BREW_NO_CASKS=1 MAC_SETUP_DATA='$TMP/nocasks' python3 '$SCRIPTS/audit.py' 2>&1 | grep -q 'brew update'; [ \${PIPESTATUS[0]} -ne 0 ]"
+check "--allow-incomplete continues anyway" bash -c "FAKE_BREW_NO_CASKS=1 MAC_SETUP_DATA='$TMP/nocasks' python3 '$SCRIPTS/audit.py' --allow-incomplete >/dev/null"
+
 echo "== presets import / list / export =="
 cat > "$TMP/community.Brewfile" <<'BF'
 # someone else's Brewfile

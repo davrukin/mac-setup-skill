@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Stand-in for Homebrew used by tests/run_tests.sh. Never touches the real system.
 case "${1:-}" in
-  casks)    printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack claude claude-code jetbrains-toolbox intellij-idea-ce darktable zoom; exit 0 ;;
+  casks)    [ -n "${FAKE_BREW_NO_CASKS:-}" ] && { echo; exit 0; }
+            printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack claude claude-code jetbrains-toolbox intellij-idea-ce darktable zoom; exit 0 ;;
   info)
     # `brew info --json=v2 --cask ...`: only the casks the audit tests care about.
     cat <<'JSON'
