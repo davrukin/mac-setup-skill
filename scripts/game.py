@@ -133,8 +133,12 @@ class Icons:
             for cask in json.loads(out or "{}").get("casks", []):
                 names = []
                 for art in cask.get("artifacts", []):
-                    if isinstance(art, dict):
-                        names += [re.sub(r"\.app$", "", a.rsplit("/", 1)[-1], flags=re.I) for a in art.get("app", []) if isinstance(a, str)]
+                    if not isinstance(art, dict):
+                        continue
+                    paths = [a for a in art.get("app", []) if isinstance(a, str)]
+                    for entry in art.get("uninstall", []) if isinstance(art.get("uninstall"), list) else []:  # .pkg casks
+                        paths += [d for d in entry.get("delete", []) if isinstance(d, str) and d.endswith(".app")] if isinstance(entry, dict) and isinstance(entry.get("delete"), list) else []
+                    names += [re.sub(r"\.app$", "", a.rsplit("/", 1)[-1], flags=re.I) for a in paths]
                 self.cask_apps[cask["token"]] = names
         except (ValueError, KeyError):
             pass
@@ -323,6 +327,8 @@ def play(inventory: dict, categories: list[str] | None = None, redo: bool = Fals
     pos, note = 0, ""
     if choices and not redo:
         note = f"Resuming: {len(choices)} items already sorted (use --redo to start over)."
+        if not todo:
+            print("Everything is already sorted; run again with --redo to start over.")
     try:
         while pos < len(todo):
             i = todo[pos]
