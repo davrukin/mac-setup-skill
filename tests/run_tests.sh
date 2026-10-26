@@ -99,6 +99,18 @@ MAC_SETUP_GAME_KEYS="q" python3 "$SCRIPTS/audit.py" --game > "$TMP/game2.out"
 check "second run resumes from saved choices" bash -c "grep -q 'Resuming' '$TMP/game2.out' && python3 -c \"import yaml;P=yaml.safe_load(open('$PRESETS'))['presets'];assert 'iterm2' in P['developer']['casks']\""
 check "game refuses to run without a terminal" bash -c "! python3 '$SCRIPTS/audit.py' --game < /dev/null >/dev/null 2>&1"
 
+echo "== game: descriptions and dependencies =="
+check "descriptions and dependents come from Homebrew" py "
+import sys,json;sys.path.insert(0,'$SCRIPTS');import game
+inv={'casks':['iterm2'],'brews':['git','jq','wget'],'mas':[],'vscode':[]}
+meta,_=game.load_meta(inv)
+assert meta['casks:iterm2']['desc'].startswith('Terminal emulator')
+assert meta['brews:jq']['needed_by']==['git'] and meta['brews:git']['desc'].startswith('Distributed')
+items={i.name:i for i in game.build_items(inv)}
+assert game.dependency_only(items['jq'],meta) and not game.dependency_only(items['git'],meta) and not game.dependency_only(items['wget'],meta)
+text=game.describe(items['jq'],meta['brews:jq']); assert 'git' in text and 'dependency' in text"
+check "dependency-only tools are hidden unless asked for" bash -c "grep -q 'hidden because Homebrew only installed them as dependencies' '$TMP/game.out'"
+
 echo "== game: new category and hotkey =="
 MAC_SETUP_DATA="$TMP/game2" MAC_SETUP_GAME_KEYS="n,creative,r,d,r,n,odd,c,q" python3 "$SCRIPTS/audit.py" --game > "$TMP/game3.out"
 check "new category gets a hotkey, takes the current item, hotkeys d and r sort items" py "
