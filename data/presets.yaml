@@ -326,7 +326,7 @@ presets:
     - name: Zookeeper World
       id: 1370858242
     vscode: []
-  base:
+  common:
     description: Tools every Mac gets, whatever its role
     source: audit:heuristic
     taps: []
