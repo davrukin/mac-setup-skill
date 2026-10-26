@@ -99,6 +99,19 @@ MAC_SETUP_GAME_KEYS="q" python3 "$SCRIPTS/audit.py" --game > "$TMP/game2.out"
 check "second run resumes from saved choices" bash -c "grep -q 'Resuming' '$TMP/game2.out' && python3 -c \"import yaml;P=yaml.safe_load(open('$PRESETS'))['presets'];assert 'iterm2' in P['developer']['casks']\""
 check "game refuses to run without a terminal" bash -c "! python3 '$SCRIPTS/audit.py' --game < /dev/null >/dev/null 2>&1"
 
+echo "== game: new category and hotkey =="
+MAC_SETUP_DATA="$TMP/game2" MAC_SETUP_GAME_KEYS="n,creative,r,d,r,n,odd,c,q" python3 "$SCRIPTS/audit.py" --game > "$TMP/game3.out"
+check "new category gets a hotkey, takes the current item, hotkeys d and r sort items" py "
+import json;s=json.load(open('$TMP/game2/game_choices.json'));c=s['choices']
+assert c['casks:claude']=='creative' and c['casks:claude-code']=='developer' and c['casks:figma']=='creative',c"
+check "clashing hotkey is refused but the category is still created" py "
+import json;s=json.load(open('$TMP/game2/game_choices.json'));assert s['categories']['creative']=='r' and s['categories']['odd']=='' and s['categories']['common']=='c',s['categories'];assert s['choices']['casks:google-chrome']=='odd'"
+check "new category becomes a preset" py "
+import yaml;P=yaml.safe_load(open('$TMP/game2/presets.yaml'))['presets'];assert {'claude','figma'}<=set(P['creative']['casks']) and 'odd' in P"
+MAC_SETUP_DATA="$TMP/game2" MAC_SETUP_GAME_KEYS="q" python3 "$SCRIPTS/audit.py" --game > "$TMP/game4.out"
+check "categories made in-game are remembered on the next run" py "
+import json;s=json.load(open('$TMP/game2/game_choices.json'));assert s['categories']['creative']=='r'"
+
 echo "== presets import / list / export =="
 cat > "$TMP/community.Brewfile" <<'BF'
 # someone else's Brewfile
