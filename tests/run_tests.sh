@@ -192,6 +192,20 @@ check "Brewfile written to data/brewfiles" test -f "$MAC_SETUP_DATA/brewfiles/de
 check "brew bundle install invoked" grep -q "fake brew: bundle install" "$TMP/run.out"
 check "non-interactive run without --preset fails clearly" bash -c "! python3 '$SCRIPTS/deploy.py' < /dev/null 2>'$TMP/err.out' && grep -q -- '--preset' '$TMP/err.out'"
 
+echo "== not_needed is an exclusion =="
+mkdir -p "$TMP/excl" && cat > "$TMP/excl/presets.yaml" <<'YAML'
+presets:
+  work:
+    brews: [jq, bat]
+    casks: [raycast]
+    mas: [{name: Things 3, id: 904280696}]
+  not_needed:
+    brews: [bat]
+    mas: [{name: Things 3, id: 904280696}]
+YAML
+MAC_SETUP_DATA="$TMP/excl" python3 "$SCRIPTS/deploy.py" --preset work --no-recs --dry-run > "$TMP/excl.out"
+check "items in not_needed are left out of every other preset" bash -c "grep -q 'brew \"jq\"' '$TMP/excl.out' && ! grep -q 'brew \"bat\"' '$TMP/excl.out' && ! grep -q 'Things 3' '$TMP/excl.out' && grep -q 'cask \"raycast\"' '$TMP/excl.out'"
+
 echo "== launcher =="
 check "--new-run audits into its own dated folder" bash -c "bash '$SCRIPTS/setup.sh' --new-run audit >/dev/null && ls -d '$MAC_SETUP_DATA'/runs/????-??-??_?????? | head -1 | xargs -I{} test -f {}/presets.yaml"
 check "--data-dir uses the given folder" bash -c "bash '$SCRIPTS/setup.sh' --data-dir '$TMP/custom' audit >/dev/null && test -f '$TMP/custom/inventory.json'"
