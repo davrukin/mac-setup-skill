@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 import common
+import verify
 import recommend as rec
 
 
@@ -81,6 +82,7 @@ def main() -> None:
     ap.add_argument("--ai", action="store_true", help="include LLM recommendations (needs LLM_MODEL)")
     ap.add_argument("--output", help="where to write the Brewfile (default: data/brewfiles/<preset>.Brewfile)")
     ap.add_argument("--dry-run", action="store_true", help="print the Brewfile and command, change nothing")
+    ap.add_argument("--ignore-problems", action="store_true", help="install even if verification found conflicts or disabled packages")
     ap.add_argument("--run", action="store_true", help="run `brew bundle install` after writing the Brewfile")
     args = ap.parse_args()
 
@@ -99,6 +101,14 @@ def main() -> None:
     if excludes:
         preset, removed = apply_excludes(preset, excludes)
         print(f"➖ Excluded {len(removed)} item(s) from this preset: {', '.join(removed) or 'none matched'}")
+
+    findings = verify.verify_presets({name: preset})
+    if findings:
+        print(f"\n🔎 Checked '{name}' against Homebrew: {verify.summary(findings)}.")
+        verify.print_findings(findings)
+    blocking = [f for f in findings if f["severity"] == "error"]
+    if blocking and args.run and not args.ignore_problems:
+        sys.exit("❌ Not installing: fix the problems above (setup.sh verify can help), or add --ignore-problems.")
 
     interactive = sys.stdin.isatty() and not args.preset
     if not args.no_recs:
