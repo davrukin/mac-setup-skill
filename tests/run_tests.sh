@@ -250,7 +250,7 @@ for entry in "missing:--preset dev" "relocate:" "verify:"; do
   cmd="${entry%%:*}"; extra="${entry#*:}"
   check "$cmd says Homebrew is missing instead of reporting nothing installed" bash -c "
     out=\$(env PATH=/usr/bin:/bin MAC_SETUP_BREW_DIRS=/nonexistent MAC_SETUP_DATA='$TMP/ms' '$PY3' '$SCRIPTS/$cmd.py' $extra 2>&1); code=\$?
-    [ \$code -ne 0 ] && echo \"\$out\" | grep -q 'Homebrew is not installed' && ! echo \"\$out\" | grep -qi 'missing:'"
+    [ \$code -ne 0 ] && echo \"\$out\" | grep -q 'Homebrew was not found' && ! echo \"\$out\" | grep -qi 'missing:'"
 done
 mkdir -p "$TMP/hb" && cp "$HERE/fakebin/brew" "$TMP/hb/brew"
 check "brew in Homebrew's own folder is found even when PATH lacks it" bash -c "

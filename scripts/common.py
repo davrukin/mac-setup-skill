@@ -180,8 +180,9 @@ def have(cmd: str) -> bool:
 def require_brew(task: str) -> None:
     """Stop with a clear message when Homebrew is missing, instead of reporting that nothing is installed."""
     if not have("brew"):
-        sys.exit(f"❌ Homebrew is not installed on this Mac (or not found in /opt/homebrew or /usr/local), so {task} cannot work.\n"
-                 "   Install it with: scripts/setup.sh bootstrap   (it asks before downloading anything), then run this again.")
+        sys.exit(f"❌ Homebrew was not found, so {task} cannot work.\n"
+                 "   If you have installed it, it is in an unusual place: open a new terminal, or run  eval \"$(/path/to/brew shellenv)\"  and try again.\n"
+                 "   If not, scripts/setup.sh bootstrap installs it (it asks before downloading anything).")
 
 
 def run(cmd: list[str], timeout: int = 180) -> str | None:
