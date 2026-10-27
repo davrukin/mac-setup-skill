@@ -1,0 +1,31 @@
+# Items left out of one preset when deploying (name, cask token, App Store name or id).
+# Edit with: setup.sh presets exclude NAME item...
+excludes:
+  developer:
+  - cadcraft
+  - calibre
+  - Capital One Shopping
+  - Cashculator
+  - Chronicle
+  - Deliveries
+  - effectcraft
+  - filmcraft
+  - Flighty
+  - GoPro Player
+  - GoPro Quik
+  - Ground News
+  - iBooks Author
+  - Mela
+  - OpenBudget
+  - Parcel Classic
+  - PDFgear
+  - photocraft
+  - Prime Video
+  - Rosetta Stone Learn Languages
+  - soundcraft
+  - tidal
+  - transmission
+  - Under My Roof
+  - vsee
+  - WhatsApp
+  - winzip
