@@ -1,0 +1,20 @@
+# Folders that certain casks should install into. scripts/relocate.py uses this when Homebrew's
+# own definition of a cask does not name the folder (an out-of-date Homebrew, before `brew update`),
+# so the apps can still be moved to where the current definitions put them.
+# Add entries freely: `folder` is an absolute path, `casks` are cask tokens.
+folders:
+  - folder: /Applications/ArtCraft
+    casks:
+      - artcraft
+      - cadcraft
+      - deckcraft
+      - designcraft
+      - effectcraft
+      - filmcraft
+      - gridcraft
+      - lightcraft
+      - pdfcraft
+      - photocraft
+      - soundcraft
+      - vectorcraft
+      - wordcraft

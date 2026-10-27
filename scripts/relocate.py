@@ -27,23 +27,43 @@ import sys
 from pathlib import Path
 
 import audit
+import yaml
+
 import common
 
 
-def cask_targets(casks: list[str]) -> dict[str, list[tuple[str, str]]]:
-    """{cask: [(app bundle name, absolute install path)]} for casks that name an explicit install path."""
+def folder_rules() -> dict[str, str]:
+    """{cask: folder} from references/folders.yaml, for when Homebrew's definition does not name the folder."""
+    try:
+        path = Path(os.environ.get("MAC_SETUP_FOLDERS_FILE") or common.REFERENCES_DIR / "folders.yaml")  # env: tests
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+    return {str(c): str(f["folder"]) for f in data.get("folders", []) for c in f.get("casks", [])}
+
+
+def cask_targets(casks: list[str]) -> dict[str, list[tuple[str, str, str]]]:
+    """{cask: [(app bundle name, absolute install path, source)]}. The path comes from the cask's own
+    definition ("metadata") or, when that has none, from references/folders.yaml ("rule")."""
     out = common.run(["brew", "info", "--cask", "--json=v2", *casks], timeout=300) if casks else None
-    result: dict[str, list[tuple[str, str]]] = {}
+    result: dict[str, list[tuple[str, str, str]]] = {}
     if not out:
         return result
     try:
         data = json.loads(out)
     except ValueError:
         return result
+    rules = folder_rules()
     for cask in data.get("casks", []):
+        token = cask["token"]
         for art in cask.get("artifacts", []):
-            if isinstance(art, dict) and art.get("app") and str(art.get("target", "")).startswith("/"):
-                result.setdefault(cask["token"], []).append((str(art["app"][0]), str(art["target"])))
+            if not (isinstance(art, dict) and art.get("app")):
+                continue
+            name = str(art["app"][0])
+            if str(art.get("target", "")).startswith("/"):
+                result.setdefault(token, []).append((name, str(art["target"]), "metadata"))
+            elif token in rules:
+                result.setdefault(token, []).append((name, f"{rules[token]}/{name}", "rule"))
     return result
 
 
@@ -55,7 +75,7 @@ def is_running(app: Path) -> bool:
 def plan_casks(candidates: list[str], managed: set[str]) -> list[dict]:
     steps = []
     for token, entries in cask_targets(candidates).items():
-        for bundle_name, target in entries:
+        for bundle_name, target, source in entries:
             if Path(target).exists():
                 continue
             # Only a subfolder of an app folder counts (ArtCraft inside /Applications); a plain
@@ -65,6 +85,8 @@ def plan_casks(candidates: list[str], managed: set[str]) -> list[dict]:
             if not loose:
                 continue
             kind = "reinstall" if token in managed else "adopt"
+            if kind == "reinstall" and source == "rule":
+                kind = "stale"  # Homebrew's definition still has no folder, so a reinstall would put it straight back
             steps.append({"cask": token, "kind": kind, "from": str(loose), "to": target})
     return steps
 
@@ -95,6 +117,7 @@ def run_step(label: str, cmd: list[str]) -> bool:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--apply", action="store_true", help="do it (default: only show the plan)")
+    ap.add_argument("--skip-update", action="store_true", help="do not run `brew update` first")
     ap.add_argument("--uninstall-homebrew-copies", action="store_true",
                     help="with --apply: `brew uninstall --cask` the Homebrew copies of Setapp apps, so you can add them from Setapp")
     args = ap.parse_args()
@@ -102,7 +125,10 @@ def main() -> None:
 
     managed = {ln.strip() for ln in (common.run(["brew", "list", "--cask", "-1"]) or "").splitlines() if ln.strip()}
     store = common.load_presets()["presets"]
-    candidates = sorted(managed | {c for p in store.values() for c in p.get("casks", [])})
+    if not args.skip_update:
+        print("🔄 Updating Homebrew so cask definitions (which say where each app belongs) are current...", flush=True)
+        subprocess.run(["brew", "update"], capture_output=True)
+    candidates = sorted(managed | set(folder_rules()) | {c for p in store.values() for c in p.get("casks", [])})
     print("🔍 Looking for apps in the wrong folder...", flush=True)
     steps = plan_casks(candidates, managed)
     setapp = plan_setapp(managed)
@@ -110,7 +136,8 @@ def main() -> None:
 
     print(f"\n📁 Apps that belong in a folder but sit elsewhere: {len(steps)}")
     for s in steps:
-        how = "brew reinstall --cask --force" if s["kind"] == "reinstall" else "move, then brew install --cask --adopt"
+        how = {"reinstall": "brew reinstall --cask --force", "adopt": "move, then brew install --cask --adopt",
+               "stale": "skipped: Homebrew's definition has no folder yet; run brew update and try again"}[s["kind"]]
         print(f"  • {s['cask']}: {s['from']} → {s['to']}   ({how})")
     print(f"\n🧩 Setapp apps installed only outside Setapp: {len(outside)}")
     for name in outside:
@@ -134,6 +161,9 @@ def main() -> None:
     if steps and common.confirm(f"\nMove {len(steps)} app(s) now? Quit them first."):
         for s in steps:
             print(f"\n→ {s['cask']}", flush=True)
+            if s["kind"] == "stale":
+                print("   skipped: Homebrew's definition does not name the folder yet; run `brew update`, then try again")
+                continue
             if is_running(Path(s["from"])):
                 print("   skipped: the app is running; quit it and run again")
                 failed += 1
