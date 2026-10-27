@@ -19,6 +19,7 @@ REFERENCES_DIR = SKILL_ROOT / "references"
 DATA_DIR = Path(os.environ.get("MAC_SETUP_DATA", SKILL_ROOT / "data"))
 PRESETS_FILE = DATA_DIR / "presets.yaml"
 INVENTORY_FILE = DATA_DIR / "inventory.json"
+PRESET_EXCLUDES_FILE = DATA_DIR / "preset_excludes.yaml"
 WEB_RECS_FILE = DATA_DIR / "web_recommendations.json"
 BREWFILE_DIR = DATA_DIR / "brewfiles"
 RECS_DIR = DATA_DIR / "recommendations"
@@ -175,6 +176,32 @@ def _token_set(subcommand: str) -> set[str] | None:
         # blank line); treat it as unavailable rather than as "no casks exist".
         _TOKEN_CACHE[subcommand] = tokens or None
     return _TOKEN_CACHE[subcommand]
+
+
+def load_preset_excludes() -> dict[str, list[str]]:
+    """Per-preset exclusions kept in data/preset_excludes.yaml: {"developer": ["slack", ...]}.
+    A separate file, so audits and `verify --apply` (which regenerate presets.yaml) never lose them."""
+    try:
+        with open(PRESET_EXCLUDES_FILE, "r", encoding="utf-8") as f:
+            raw = (yaml.safe_load(f) or {}).get("excludes") or {}
+    except OSError:
+        return {}
+    return {str(k): [str(v) for v in (vals or [])] for k, vals in raw.items()}
+
+
+def save_preset_excludes(excludes: dict[str, list[str]]) -> None:
+    PRESET_EXCLUDES_FILE.parent.mkdir(parents=True, exist_ok=True)
+    clean = {k: sorted(dict.fromkeys(v), key=str.lower) for k, v in sorted(excludes.items()) if v}
+    header = "# Items left out of one preset when deploying (name, cask token, App Store name or id).\n# Edit with: setup.sh presets exclude NAME item...\n"
+    PRESET_EXCLUDES_FILE.write_text(header + yaml.safe_dump({"excludes": clean}, sort_keys=False), encoding="utf-8")
+
+
+def preset_has(preset: dict, item: str) -> bool:
+    """Does the preset contain this name (formula, cask, extension, App Store name or id)?"""
+    p = normalize_preset(preset)
+    if item in p["casks"] or item in p["vscode"] or item in p["brews"] or item in {short_name(b) for b in p["brews"]}:
+        return True
+    return any(item == m["name"] or item == str(m["id"]) for m in p["mas"])
 
 
 EXCLUDE_PRESET = "not_needed"  # items in this preset are never deployed from any other preset
