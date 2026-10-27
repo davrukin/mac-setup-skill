@@ -137,10 +137,10 @@ case "$CMD" in
   game)      require_mac; ensure_python; run_py audit.py --game ${REST[@]+"${REST[@]}"} ;;
   deploy)    require_mac; ensure_brew; ensure_python; run_py deploy.py ${REST[@]+"${REST[@]}"} ;;
   recommend) ensure_python; run_py recommend.py ${REST[@]+"${REST[@]}"} ;;
-  verify)    ensure_python; run_py verify.py ${REST[@]+"${REST[@]}"} ;;
-  missing)   ensure_python; run_py missing.py ${REST[@]+"${REST[@]}"} ;;
-  relocate)  ensure_python; run_py relocate.py ${REST[@]+"${REST[@]}"} ;;
-  setapp)    ensure_python; run_py setapp.py ${REST[@]+"${REST[@]}"} ;;
+  verify)    ensure_brew; ensure_python; run_py verify.py ${REST[@]+"${REST[@]}"} ;;
+  missing)   ensure_brew; ensure_python; run_py missing.py ${REST[@]+"${REST[@]}"} ;;
+  relocate)  ensure_brew; ensure_python; run_py relocate.py ${REST[@]+"${REST[@]}"} ;;
+  setapp)    ensure_brew; ensure_python; run_py setapp.py ${REST[@]+"${REST[@]}"} ;;
   manual)    ensure_python; run_py manual_apps.py ${REST[@]+"${REST[@]}"} ;;
   presets)   ensure_python; run_py presets.py ${REST[@]+"${REST[@]}"} ;;
   menu)      ensure_python; menu ;;
