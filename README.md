@@ -99,4 +99,4 @@ Runs the audit, import, recommend and deploy flows against a fake `brew` and fak
 
 ## License
 
-Add one before publishing (MIT is a common choice for a tool like this).
+[GNU AGPL-3.0-or-later](LICENSE), Copyright (C) 2026 Daniel Avrukin. You can use, change and share this freely. If you distribute a modified version, or run one as a network service, you must offer its source under the same license. That also covers your own presets and category choices if you build them from the files in `data/`.
