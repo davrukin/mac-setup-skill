@@ -75,6 +75,31 @@ def add_recs(preset: dict, recs: dict, up_to_tier: int) -> tuple[dict, list[str]
     return common.normalize_preset(out), added
 
 
+def effective_preset(name: str, store: dict, extra: set[str] | None = None) -> tuple[dict, set[str]]:
+    """The preset as it would really be installed: minus the not_needed list, this preset's own excludes,
+    casks that belong to Setapp, and anything in `extra`. Prints what it leaves out and why."""
+    preset = store[name]
+    excludes = set(extra or ())
+    if name != common.EXCLUDE_PRESET:
+        marked = common.exclusion_names(store)
+        if marked:
+            print(f"🚫 Leaving out everything in the '{common.EXCLUDE_PRESET}' preset ({len(marked)} names).")
+        excludes |= marked
+    own = set(common.load_preset_excludes().get(name, []))
+    if own:
+        print(f"🚫 Leaving out {len(own)} item(s) you excluded for '{name}': {', '.join(sorted(own, key=str.lower))}")
+        excludes |= own
+    setapp = common.setapp_casks() & set(preset.get("casks") or [])
+    if setapp:
+        print(f"🧩 {len(setapp)} app(s) belong to Setapp, so Homebrew will not install them: {', '.join(sorted(setapp))}.\n"
+              "   Install Setapp, sign in, and add them from inside it so your subscription covers them (see data/manual-installs.md).")
+        excludes |= setapp
+    if excludes:
+        preset, removed = apply_excludes(preset, excludes)
+        print(f"➖ Excluded {len(removed)} item(s) from this preset: {', '.join(removed) or 'none matched'}")
+    return preset, excludes
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--preset")
@@ -95,26 +120,7 @@ def main() -> None:
     if not store:
         sys.exit(f"❌ No presets found at {common.PRESETS_FILE}. Run audit first, or import one: presets.py import <Brewfile>")
     name = pick_preset(store, args.preset)
-    preset = store[name]
-
-    excludes = {e.strip() for e in args.exclude.split(",") if e.strip()}
-    if name != common.EXCLUDE_PRESET:
-        marked = common.exclusion_names(store)
-        if marked:
-            print(f"🚫 Leaving out everything in the '{common.EXCLUDE_PRESET}' preset ({len(marked)} names).")
-        excludes |= marked
-    own = set(common.load_preset_excludes().get(name, []))
-    if own:
-        print(f"🚫 Leaving out {len(own)} item(s) you excluded for '{name}': {', '.join(sorted(own, key=str.lower))}")
-        excludes |= own
-    setapp = common.setapp_casks() & set(preset.get("casks") or [])
-    if setapp:
-        print(f"🧩 {len(setapp)} app(s) belong to Setapp, so Homebrew will not install them: {', '.join(sorted(setapp))}.\n"
-              "   Install Setapp, sign in, and add them from inside it so your subscription covers them (see data/manual-installs.md).")
-        excludes |= setapp
-    if excludes:
-        preset, removed = apply_excludes(preset, excludes)
-        print(f"➖ Excluded {len(removed)} item(s) from this preset: {', '.join(removed) or 'none matched'}")
+    preset, excludes = effective_preset(name, store, {e.strip() for e in args.exclude.split(",") if e.strip()})
 
     findings = verify.verify_presets({name: preset})
     if findings:

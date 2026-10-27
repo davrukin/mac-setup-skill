@@ -73,6 +73,8 @@ It writes `data/brewfiles/<preset>.Brewfile`, prints `brew bundle install --file
 
 Before installing, **ask the user what should be left out**. Common cases on a work Mac: personal chat, VPN and password-manager apps, anything the employer already deploys through MDM, and tools that conflict with company policy. Pass those with `--exclude`. Apps that live in a Setapp folder are Setapp's: `deploy` skips their casks and `data/manual-installs.md` says to add them from Setapp. `--run` installs item by item with progress, a log in `data/logs/` and a failure list (see `docs/TROUBLESHOOTING.md`). Show the dry-run output and get a go-ahead before `--run`, because this installs software on a machine the user may not fully own.
 
+After an install, `scripts/setup.sh missing --preset NAME` lists anything still absent (`--install` retries it), and `scripts/setup.sh relocate` finds apps in the wrong folder (it shows a plan; `--apply` acts). Setapp apps are never moved or installed by these; they are listed for the user to add from Setapp.
+
 Notes to pass on: Mac App Store entries need the user signed in to the App Store first; an app already present in `/Applications` can make a cask install fail until it is removed or adopted; re-running the same command skips finished items.
 
 ### 4. Use someone else's config
