@@ -164,6 +164,11 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
             if index is None and looks_managed(name, managed_casks):
                 continue
             usable = [t for t in tokens if t not in unusable]
+            if usable and index and any(
+                m in index["conflicts"].get(usable[0], ()) or usable[0] in index["conflicts"].get(m, ())
+                for m in managed_casks
+            ):
+                continue  # e.g. Word.app belongs to the installed microsoft-office suite, not to the microsoft-word cask
             if usable:
                 adopted.append(usable[0])
             else:
@@ -286,6 +291,21 @@ def choose_groups(inventory: dict, args) -> dict[str, dict]:
 
 
 # --------------------------------------------------------------------------
+def save_presets(inventory: dict, groups: dict[str, dict], out_path: Path, write: bool = True) -> dict[str, dict]:
+    """Write current_system plus `groups` to out_path, keeping presets that were imported or hand-made."""
+    everything = common.empty_preset("Everything installed on the audited Mac.", "audit")
+    for key in (*common.LIST_KEYS, "mas"):
+        everything[key] = list(inventory[key])
+    new_presets = {"current_system": everything, **groups}
+    existing = common.load_presets(out_path)["presets"]
+    kept = {n: p for n, p in existing.items() if not str(p.get("source", "")).startswith("audit") and n not in new_presets}
+    merged = {**new_presets, **kept}
+    merged = {n: common.normalize_preset(p) for n, p in merged.items()}
+    if write:
+        common.save_presets({"presets": merged}, out_path)
+    return merged
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ai", action="store_true", help="group tools with an LLM (needs LLM_MODEL; sends tool names to the provider)")
@@ -312,17 +332,8 @@ def main() -> None:
         print(f"📝 Inventory written to {common.INVENTORY_FILE}")
         return
 
-    everything = common.empty_preset("Everything installed on the audited Mac.", "audit")
-    for key in (*common.LIST_KEYS, "mas"):
-        everything[key] = list(inventory[key])
-    new_presets = {"current_system": everything, **choose_groups(inventory, args)}
-
-    # Refresh audit-generated presets, keep presets that were imported or hand-made.
     out_path = Path(args.output)
-    existing = common.load_presets(out_path)["presets"]
-    kept = {n: p for n, p in existing.items() if not str(p.get("source", "")).startswith("audit") and n not in new_presets}
-    merged = {**new_presets, **kept}
-    common.save_presets({"presets": {n: common.normalize_preset(p) for n, p in merged.items()}}, out_path)
+    merged = save_presets(inventory, choose_groups(inventory, args), out_path)
 
     print(f"\n🎉 Presets written to {out_path}:")
     for name, preset in merged.items():
@@ -331,6 +342,14 @@ def main() -> None:
         print("\nℹ️  Apps with no matching Homebrew cask (install these by hand or from the vendor):")
         for name in inventory["unmatched_apps"]:
             print(f"   - {name}")
+    try:
+        import verify  # lazy: verify imports audit
+
+        findings = verify.verify_presets(merged)
+        if findings:
+            print(f"\n🔎 Verification: {verify.summary(findings)}. Details and fixes: setup.sh verify")
+    except Exception as exc:  # noqa: BLE001 - the check is advisory and must never fail an audit
+        print(f"\nℹ️  Skipped the verification step ({exc}). Run setup.sh verify to retry.")
     print("\n⚠️  presets.yaml lists everything you have installed. Review it before pushing to a public repo.")
 
 
