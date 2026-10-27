@@ -258,6 +258,16 @@ import sys;sys.path.insert(0,'$SCRIPTS');import common,deploy
 P={'a':{'mas':[{'name':'Pages','id':1},{'name':'Pages','id':2}]},'not_needed':{'mas':[{'name':'Pages','id':1}]}}
 out,_=deploy.apply_excludes(P['a'],common.exclusion_names(P));assert [m['id'] for m in out['mas']]==[2],out"
 
+echo "== per-preset excludes =="
+MAC_SETUP_DATA="$TMP/excl" python3 "$SCRIPTS/presets.py" exclude work jq > "$TMP/pe1.out"
+MAC_SETUP_DATA="$TMP/excl" python3 "$SCRIPTS/presets.py" exclude work nosuch > "$TMP/pe2.out"
+check "exclude saves a per-preset item and refuses unknown names" bash -c "grep -q 'will be left out' '$TMP/pe1.out' && grep -q 'not in' '$TMP/pe2.out' && grep -q 'jq' '$TMP/excl/preset_excludes.yaml' && ! grep -q nosuch '$TMP/excl/preset_excludes.yaml'"
+MAC_SETUP_DATA="$TMP/excl" python3 "$SCRIPTS/deploy.py" --preset work --no-recs --dry-run > "$TMP/pe3.out"
+check "deploy leaves out the excluded item for that preset only" bash -c "! sed -n '/^# Generated/,\$p' '$TMP/pe3.out' | grep -q 'jq' && grep -q 'cask \"raycast\"' '$TMP/pe3.out' && grep -q 'you excluded for' '$TMP/pe3.out'"
+check "excludes are kept in their own file and listed" bash -c "MAC_SETUP_DATA='$TMP/excl' python3 '$SCRIPTS/presets.py' excludes work | grep -q jq"
+MAC_SETUP_DATA="$TMP/excl" python3 "$SCRIPTS/presets.py" include work jq > /dev/null
+check "include puts the item back" bash -c "MAC_SETUP_DATA='$TMP/excl' python3 '$SCRIPTS/deploy.py' --preset work --no-recs --dry-run | sed -n '/^# Generated/,\$p' | grep -q 'brew \"jq\"'"
+
 echo "== launcher =="
 check "--new-run audits into its own dated folder" bash -c "bash '$SCRIPTS/setup.sh' --new-run audit >/dev/null && ls -d '$MAC_SETUP_DATA'/runs/????-??-??_?????? | head -1 | xargs -I{} test -f {}/presets.yaml"
 check "--data-dir uses the given folder" bash -c "bash '$SCRIPTS/setup.sh' --data-dir '$TMP/custom' audit >/dev/null && test -f '$TMP/custom/inventory.json'"
