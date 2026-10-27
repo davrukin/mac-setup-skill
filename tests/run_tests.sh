@@ -219,6 +219,31 @@ import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));i['setapp_casks'
 MAC_SETUP_DATA="$TMP/sa" python3 "$SCRIPTS/deploy.py" --preset developer --no-recs --dry-run > "$TMP/sa.out"
 check "deploy leaves Setapp casks to Setapp" bash -c "grep -q 'belong to Setapp' '$TMP/sa.out' && ! grep -q '^cask \"iterm2\"' '$TMP/sa.out'"
 
+echo "== missing and relocate =="
+mkdir -p "$TMP/ms" "$TMP/Apps/CADCraft.app/Contents" "$TMP/Apps/Ghost.app/Contents" "$TMP/Apps/Soulver.app/Contents"
+cat > "$TMP/ms/presets.yaml" <<'YAML'
+presets:
+  dev:
+    description: test
+    brews: [ripgrep]
+    casks: [iterm2]
+  craft:
+    description: test
+    casks: [cadcraft]
+YAML
+echo '{"setapp_apps": ["Soulver", "Ghost"], "setapp_casks": []}' > "$TMP/ms/inventory.json"
+MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/missing.py" --preset dev > "$TMP/miss.out"
+check "missing lists absent items and separates apps present outside Homebrew" bash -c "sed -n '/^Missing/,\$p' '$TMP/miss.out' | grep -q ripgrep && grep -q 'Present but not installed by Homebrew' '$TMP/miss.out' && ! sed -n '/^Missing/,\$p' '$TMP/miss.out' | grep -q iterm2"
+check "missing without --install installs nothing" bash -c "! grep -q 'fake brew: install' '$TMP/miss.out'"
+MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/missing.py" --preset dev --install --skip-update > "$TMP/miss2.out"
+check "missing --install installs only the missing items" bash -c "grep -q 'fake brew: install ripgrep' '$TMP/miss2.out' && ! grep -q 'install --cask iterm2' '$TMP/miss2.out'"
+MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" > "$TMP/rel1.out"
+check "relocate shows the plan and moves nothing" bash -c "grep -q 'cadcraft' '$TMP/rel1.out' && [ -d '$TMP/Apps/CADCraft.app' ] && [ ! -d '$TMP/Apps/ArtCraft' ]"
+check "relocate sorts Setapp apps by situation" bash -c "sed -n '/only outside Setapp/,/also have/p' '$TMP/rel1.out' | grep -q Ghost && sed -n '/also have/,\$p' '$TMP/rel1.out' | grep -q Soulver"
+MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply > "$TMP/rel2.out"
+check "relocate --apply moves the app into its folder and adopts it" bash -c "[ -d '$TMP/Apps/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps/CADCraft.app' ] && grep -q 'install --cask --adopt cadcraft' '$TMP/rel2.out'"
+check "relocate never moves Setapp apps" bash -c "[ -d '$TMP/Apps/Ghost.app' ] && [ -d '$TMP/Apps/Soulver.app' ]"
+
 echo "== verification =="
 check "conflicts, disabled, deprecated, duplicates and overlaps are found" py "
 import sys;sys.path.insert(0,'$SCRIPTS');import verify

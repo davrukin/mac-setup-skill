@@ -17,6 +17,12 @@ case "${1:-}" in
 JSON
       exit 0 ;;
     esac
+    case "$*" in *cadcraft*)
+      cat <<JSON
+{"formulae": [], "casks": [{"token": "cadcraft", "deprecated": false, "disabled": false, "artifacts": [{"app": ["CADCraft.app"], "target": "${MAC_SETUP_APP_DIRS%%:*}/ArtCraft/CADCraft.app"}]}]}
+JSON
+      exit 0 ;;
+    esac
     # `brew info --json=v2 --cask ...`: only the casks the audit tests care about.
     cat <<'JSON'
 {"formulae": [], "casks": [
