@@ -33,6 +33,8 @@ Needs macOS, `python3` (installed with the Xcode command line tools), and Homebr
 | `setup.sh deploy [--preset NAME] [--exclude a,b] [--include-recs 1\|2\|3] [--dry-run] [--run]` | Preset to Brewfile to install command |
 | `setup.sh game [--categories a,b:key] [--redo] [--icons off]` | Sorting game: swipe through everything installed and pick a category for each, with descriptions and app icons |
 | `setup.sh verify [--apply] [--set CAT KEY...]` | Check presets for conflicts, deprecated packages and duplicates; place libraries with their dependents |
+| `setup.sh missing --preset NAME [--install]` | List what the preset should have installed on this Mac but does not; `--install` offers to try them |
+| `setup.sh relocate [--apply]` | Move casks that install into a folder (the ArtCraft apps) into it and tell Homebrew; list Setapp apps to add from Setapp |
 | `setup.sh setapp` | Record which apps run through Setapp, so `deploy` leaves them to Setapp (a fresh audit does this itself) |
 | `setup.sh manual` | Write `data/manual-installs.md`: where to get apps Homebrew cannot install |
 | `setup.sh presets list\|show\|import\|export\|delete` | Manage presets, including importing someone else's Brewfile |
