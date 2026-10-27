@@ -5,10 +5,11 @@
 
 1. Casks that install into a folder, such as the Craft apps in /Applications/ArtCraft. If the app sits
    loose in /Applications instead:
-     - installed by Homebrew: `brew reinstall --cask --force NAME`. Homebrew removes the app from the place it
-       recorded and installs it at the current path, so its records stay right.
-     - not installed by Homebrew: move the app into the folder, then `brew install --cask --adopt NAME`
-       so Homebrew takes it over without downloading it again.
+     - installed by Homebrew: move the app, remove Homebrew's old record (the app is no longer at the path it
+       names, so only the record goes), then `brew install --cask --adopt NAME` links it at the new path.
+     - not installed by Homebrew: move the app, then `brew install --cask --adopt NAME`.
+     Neither downloads anything. They need Homebrew's current definition of the cask to name the folder, so
+     it runs `brew update` first; apps whose definition still names none are listed as "cannot be linked yet".
 2. Setapp apps. They are NOT moved: Setapp records a license when it installs an app itself, and putting an
    app into its folder does not make Setapp aware of it. The script lists the Setapp apps that are installed
    some other way, so you can add them from Setapp; --uninstall-homebrew-copies removes the Homebrew casks of
@@ -84,9 +85,9 @@ def plan_casks(candidates: list[str], managed: set[str]) -> list[dict]:
             loose = next((root / bundle_name for root in audit.app_dirs() if root == home and (root / bundle_name).exists()), None)
             if not loose:
                 continue
-            kind = "reinstall" if token in managed else "adopt"
-            if kind == "reinstall" and source == "rule":
-                kind = "stale"  # Homebrew's definition still has no folder, so a reinstall would put it straight back
+            # "relink": Homebrew installed it, so move the app and replace its record. "adopt": Homebrew did not.
+            # Both need a definition that names the folder; without one, Homebrew would look for the app in /Applications.
+            kind = "stale" if source == "rule" else ("relink" if token in managed else "adopt")
             steps.append({"cask": token, "kind": kind, "from": str(loose), "to": target})
     return steps
 
@@ -136,8 +137,9 @@ def main() -> None:
 
     print(f"\n📁 Apps that belong in a folder but sit elsewhere: {len(steps)}")
     for s in steps:
-        how = {"reinstall": "brew reinstall --cask --force", "adopt": "move, then brew install --cask --adopt",
-               "stale": "skipped: Homebrew's definition has no folder yet; run brew update and try again"}[s["kind"]]
+        how = {"relink": "move, drop the old Homebrew record, brew install --cask --adopt",
+               "adopt": "move, then brew install --cask --adopt",
+               "stale": "cannot be linked yet: Homebrew's definition has no folder; run brew update and try again"}[s["kind"]]
         print(f"  • {s['cask']}: {s['from']} → {s['to']}   ({how})")
     print(f"\n🧩 Setapp apps installed only outside Setapp: {len(outside)}")
     for name in outside:
@@ -168,17 +170,20 @@ def main() -> None:
                 print("   skipped: the app is running; quit it and run again")
                 failed += 1
                 continue
-            if s["kind"] == "reinstall":
-                Path(s["to"]).parent.mkdir(parents=True, exist_ok=True)
-                ok = run_step("reinstall", ["brew", "reinstall", "--cask", "--force", s["cask"]])
-            else:
-                Path(s["to"]).parent.mkdir(parents=True, exist_ok=True)
-                shutil.move(s["from"], s["to"])
-                print(f"   moved to {s['to']}")
-                ok = run_step("adopt", ["brew", "install", "--cask", "--adopt", s["cask"]])
-                if not ok:
+            Path(s["to"]).parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(s["from"], s["to"])
+            print(f"   moved to {s['to']}")
+            ok = True
+            if s["kind"] == "relink":
+                # The old record points at the old path; with the app gone from there, this only removes the record.
+                ok = run_step("uninstall", ["brew", "uninstall", "--cask", s["cask"]])
+            ok = ok and run_step("adopt", ["brew", "install", "--cask", "--adopt", s["cask"]])
+            if not ok:
+                if s["kind"] == "adopt":
                     shutil.move(s["to"], s["from"])
                     print("   adopt failed; the app was put back where it was")
+                else:
+                    print(f"   the app is now at {s['to']} but Homebrew is not linked to it; finish with: brew install --cask --adopt {s['cask']}")
             if ok and not Path(s["to"]).exists():
                 print(f"   ⚠️  finished, but nothing is at {s['to']}")
                 ok = False
