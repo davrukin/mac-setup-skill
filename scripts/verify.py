@@ -73,6 +73,7 @@ def check_presets(presets: dict, cask_info: dict, formula_info: dict, overlaps: 
     """
     overlaps = load_overlaps() if overlaps is None else overlaps
     excluded = common.exclusion_names(presets)
+    own_excludes = common.load_preset_excludes()
     found: dict[tuple, dict] = {}
 
     def add(severity, kind, items, preset, message, fix=None):
@@ -85,7 +86,7 @@ def check_presets(presets: dict, cask_info: dict, formula_info: dict, overlaps: 
     for pname, raw in presets.items():
         if pname == common.EXCLUDE_PRESET:
             continue
-        preset, _ = _without(raw, excluded)
+        preset, _ = _without(raw, excluded | set(own_excludes.get(pname, [])))
         casks, brews = set(preset["casks"]), set(preset["brews"])
 
         for kind, names, infos in (("casks", casks, cask_info), ("brews", brews, formula_info)):
