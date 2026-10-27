@@ -291,7 +291,7 @@ def main() -> None:
     ap.add_argument("--ai", action="store_true", help="group tools with an LLM (needs LLM_MODEL; sends tool names to the provider)")
     ap.add_argument("--categorization", metavar="FILE", help="JSON grouping produced by an assistant, instead of rules/LLM")
     ap.add_argument("--game", action="store_true", help="sort every installed item into categories in an interactive, swipe-style terminal game")
-    ap.add_argument("--categories", default="developer,common", help="game categories, comma-separated (default: developer,common)")
+    ap.add_argument("--categories", default="developer,common,not_needed", help="game categories, comma-separated, optionally name:hotkey (default: developer,common,not_needed)")
     ap.add_argument("--redo", action="store_true", help="game: ignore saved choices and start over")
     ap.add_argument("--include-dependencies", action="store_true", help="game: also ask about tools that are only installed as dependencies")
     ap.add_argument("--icons", choices=["auto", "iterm", "kitty", "off"], default="auto", help="game: how to draw app icons")

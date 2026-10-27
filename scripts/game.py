@@ -33,14 +33,15 @@ import categorize
 import common
 
 RESERVED_KEYS = set("qusn ")  # quit, undo, skip, new category, space; digits and arrows are fixed too
-DEFAULT_HOTKEYS = {"developer": "d", "common": "c"}
+DEFAULT_HOTKEYS = {"developer": "d", "common": "c", "not_needed": "x"}
 SKIP = "skip"  # the item only lives in "everything"
-DEFAULT_CATEGORIES = ["developer", "common"]
+DEFAULT_CATEGORIES = ["developer", "common", "not_needed"]
 DESCRIPTIONS = {
     "developer": "Software engineering tools, picked in the sorting game",
     "common": "Tools every Mac gets, whatever its role",
+    "not_needed": "Exclusions: never installed by deploy, from any preset",
 }
-BG = {"developer": 44, "common": 42, "creative": 45, "essentials": 43, SKIP: 100}
+BG = {"developer": 44, "common": 42, "creative": 45, "essentials": 43, "not_needed": 41, SKIP: 100}
 EXTRA_BG = [46, 41, 47]  # cyan, red, white for categories without a fixed colour
 ICON_COLS, ICON_ROWS = 14, 7
 KIND_LABEL = {"casks": "app (cask)", "brews": "command-line tool", "mas": "Mac App Store", "vscode": "VS Code extension"}
@@ -445,10 +446,10 @@ def add_category(keys: Keys, hotkeys: dict[str, str], categories: list[str]) -> 
 def play(inventory: dict, categories: list[str] | None = None, redo: bool = False,
          icon_mode: str = "auto", kinds=KIND_ORDER, include_deps: bool = False) -> dict[str, dict]:
     """Run the game and return the grouping JSON for the choices made."""
-    hotkeys = parse_categories(categories or DEFAULT_CATEGORIES)
-    hotkeys.setdefault("common", DEFAULT_HOTKEYS["common"])
-    for name, key in load_categories().items():  # categories made in earlier games
+    hotkeys = dict(load_categories())  # categories from earlier games keep their order, so number keys stay stable
+    for name, key in parse_categories(categories or DEFAULT_CATEGORIES).items():
         hotkeys.setdefault(name, key)
+    hotkeys.setdefault("common", DEFAULT_HOTKEYS["common"])
     seen: set[str] = set()
     for name in list(hotkeys):  # drop hotkeys that clash after merging
         if hotkeys[name] and (hotkeys[name] in seen or hotkeys[name] in RESERVED_KEYS or len(hotkeys[name]) != 1):
@@ -532,7 +533,7 @@ if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--categories", default=",".join(DEFAULT_CATEGORIES), help="comma-separated categories, optionally name:hotkey (default: developer,common)")
+    ap.add_argument("--categories", default=",".join(DEFAULT_CATEGORIES), help="comma-separated categories, optionally name:hotkey (default: developer,common,not_needed)")
     ap.add_argument("--redo", action="store_true", help="ignore saved choices and start over")
     ap.add_argument("--icons", choices=["auto", "iterm", "kitty", "off"], default="auto")
     ap.add_argument("--include-dependencies", action="store_true", help="also ask about tools that are only installed as dependencies")
