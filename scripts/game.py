@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Sorting game: swipe through everything installed on this Mac and pick a category for each.
 
 Every item already belongs to "everything" (the current_system preset). For each app, tool,

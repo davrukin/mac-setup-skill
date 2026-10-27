@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Sort inventory items into role presets (developer, creative, essentials, ...).
 
 Heuristic rules live in references/categories.yaml so they can be edited without

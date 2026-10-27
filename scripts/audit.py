@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Audit this Mac and write role presets to data/presets.yaml.
 
 Sources scanned: Homebrew (formulae, casks, taps), Mac App Store apps, VS Code

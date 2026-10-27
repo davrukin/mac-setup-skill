@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Check presets before they are installed, and tidy the categories.
 
 Checks (using Homebrew's own metadata, so nothing is guessed):

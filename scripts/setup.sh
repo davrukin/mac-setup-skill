@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 # mac-setup launcher: bootstraps Homebrew + a Python venv, then routes to the Python scripts.
 #
 #   setup.sh                    interactive menu

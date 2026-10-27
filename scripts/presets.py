@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Manage presets: list, show, import a Brewfile or presets file from someone else, export, delete,
 and keep per-preset excludes (items a preset should never install, e.g. a common app left off the developer preset)."""
 from __future__ import annotations

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Optional LLM access via LiteLLM (any provider). Never required.
 
 Configuration is read from the environment only; nothing is written to disk:
