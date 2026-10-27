@@ -7,7 +7,7 @@
 #   setup.sh game [args]        sort apps into categories, swipe-style  (= audit --game)
 #   setup.sh deploy [args]      preset -> Brewfile -> install     (run on the NEW Mac)
 #   setup.sh recommend [args]   tiered suggestions for a preset
-#   setup.sh presets <cmd>      list | show | import | export | delete
+#   setup.sh presets <cmd>      list | show | import | export | delete | exclude | include | excludes
 #   setup.sh verify [args]      check presets for conflicts, deprecated packages, duplicates; fix library placement
 #   setup.sh manual [args]      write data/manual-installs.md: where to get apps Homebrew cannot install
 #
