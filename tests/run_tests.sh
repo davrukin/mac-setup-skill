@@ -253,6 +253,11 @@ YAML
 MAC_SETUP_DATA="$TMP/excl" python3 "$SCRIPTS/deploy.py" --preset work --no-recs --dry-run > "$TMP/excl.out"
 check "items in not_needed are left out of every other preset" bash -c "grep -q 'brew \"jq\"' '$TMP/excl.out' && ! grep -q 'brew \"bat\"' '$TMP/excl.out' && ! sed -n '/^# Generated/,\$p' '$TMP/excl.out' | grep -q 'Things 3' && grep -q 'cask \"raycast\"' '$TMP/excl.out'"
 
+check "excluding an App Store app removes that id, not its same-named twin" py "
+import sys;sys.path.insert(0,'$SCRIPTS');import common,deploy
+P={'a':{'mas':[{'name':'Pages','id':1},{'name':'Pages','id':2}]},'not_needed':{'mas':[{'name':'Pages','id':1}]}}
+out,_=deploy.apply_excludes(P['a'],common.exclusion_names(P));assert [m['id'] for m in out['mas']]==[2],out"
+
 echo "== launcher =="
 check "--new-run audits into its own dated folder" bash -c "bash '$SCRIPTS/setup.sh' --new-run audit >/dev/null && ls -d '$MAC_SETUP_DATA'/runs/????-??-??_?????? | head -1 | xargs -I{} test -f {}/presets.yaml"
 check "--data-dir uses the given folder" bash -c "bash '$SCRIPTS/setup.sh' --data-dir '$TMP/custom' audit >/dev/null && test -f '$TMP/custom/inventory.json'"
