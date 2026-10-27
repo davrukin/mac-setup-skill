@@ -56,6 +56,10 @@ An assistant-written grouping. Group names are free-form; each becomes a preset.
 
 `{"categories": {"developer": "d", "common": "c", "hobby": "h"}, "choices": {"casks:figma": "common", "mas:497799835": "developer", "brews:jq": "skip"}}`. `categories` maps each category to its hotkey (empty string for none), including ones created in the game. Choice keys are `<kind>:<name>` (App Store apps use the numeric id); values are a category name or `skip` (everything only). Items missing from the file are unsorted and stay in `current_system` only.
 
+## manual_apps.json (`manual` command)
+
+Written by the assistant from `unmatched_apps` in inventory.json: `{"generated", "classified_by", "entries": [{"apps": ["App A", "App B"], "category": "photography", "source": "vendor|setapp|steam|gog|app-store|chrome|cask|covered|bundled|discontinued|it-managed|unknown", "url"?, "verified"?: true|false, "cask"?, "note"?}]}`. `apps` are names exactly as in `unmatched_apps`; related apps share an entry. `category` is one of the user's game categories, `not_needed` or `unsure`. `verified` is true only when a search confirmed the URL. `cask` names a working Homebrew cask that the name matcher missed. `setup.sh manual` renders `manual-installs.md` and lists unclassified apps.
+
 ## web_recommendations.json
 
 Written by an assistant after online research; read by `recommend.py` (default path `data/web_recommendations.json`).
