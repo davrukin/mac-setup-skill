@@ -8,6 +8,7 @@
 #   setup.sh deploy [args]      preset -> Brewfile -> install     (run on the NEW Mac)
 #   setup.sh recommend [args]   tiered suggestions for a preset
 #   setup.sh presets <cmd>      list | show | import | export | delete
+#   setup.sh manual [args]      write data/manual-installs.md: where to get apps Homebrew cannot install
 #
 # Flags: -y/--yes  skip confirmation prompts.   --with-ai  install litellm for LLM features.
 #        --new-run  keep this run in its own folder, data/runs/YYYY-MM-DD_HHMMSS (fresh start, nothing reused).
@@ -125,8 +126,9 @@ case "$CMD" in
   game)      require_mac; ensure_python; run_py audit.py --game ${REST[@]+"${REST[@]}"} ;;
   deploy)    require_mac; ensure_brew; ensure_python; run_py deploy.py ${REST[@]+"${REST[@]}"} ;;
   recommend) ensure_python; run_py recommend.py ${REST[@]+"${REST[@]}"} ;;
+  manual)    ensure_python; run_py manual_apps.py ${REST[@]+"${REST[@]}"} ;;
   presets)   ensure_python; run_py presets.py ${REST[@]+"${REST[@]}"} ;;
   menu)      ensure_python; menu ;;
-  -h|--help|help) sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
+  -h|--help|help) sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
   *) die "Unknown command '$CMD'. Try: setup.sh --help" ;;
 esac
