@@ -1,6 +1,6 @@
 ---
 name: mac-setup
-description: audit a mac's installed apps, homebrew packages, app store apps and vs code extensions, sort them into role presets (developer, creative or photographer, essentials), recommend missing tools in three tiers, and generate a brewfile plus the brew bundle command to install a preset on a new mac. use whenever the user wants to set up a new mac, clone or migrate their mac setup, build a brewfile, make a work mac match their personal one, import someone else's brewfile, or asks what apps and cli tools they should install, even if they never say homebrew or preset.
+description: audit a mac's installed apps, homebrew packages, app store apps and vs code extensions; sort them into category presets (developer, common, photography, gaming, plus a not_needed exclusion list) with rules, an llm, or an interactive swipe-style terminal sorting game; verify presets for conflicts, deprecated packages and duplicates; list the apps homebrew cannot install with where to get each one; recommend missing tools in three tiers; and generate a brewfile plus the brew bundle command to install a preset on a new mac. use whenever the user wants to set up a new mac, clone or migrate their mac setup, sort or categorize their apps, build a brewfile, make a work mac match their personal one, import someone else's brewfile, or asks what apps and cli tools they should install, even if they never say homebrew or preset.
 ---
 
 # Mac setup
