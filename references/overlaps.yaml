@@ -1,0 +1,19 @@
+# Pairs of tools that overlap, used by scripts/verify.py. Homebrew's own metadata already covers
+# hard conflicts (conflicts_with) and deprecated/disabled packages; this file is for the soft
+# cases Homebrew does not flag. Add entries freely.
+#
+#   kind: replaced   items[0] is obsolete and items[1] is its maintained successor (advice: drop items[0])
+#   kind: redundant  both can be installed, but one is probably enough (advice only)
+overlaps:
+  - kind: replaced
+    items: [youtube-dl, yt-dlp]
+    reason: youtube-dl is no longer maintained; yt-dlp is the maintained fork with the same commands.
+  - kind: replaced
+    items: [macdown, macdown-3000]
+    reason: macdown is abandoned and its cask is disabled; macdown-3000 is the maintained fork.
+  - kind: redundant
+    items: [ffmpeg, ffmpeg-full]
+    reason: ffmpeg-full is keg-only (not on PATH) and adds extra codecs. They do not conflict, so keep both only if you need the extra codecs.
+  - kind: redundant
+    items: [google-chrome, chromium]
+    reason: Two Chromium-based browsers; usually one is enough.

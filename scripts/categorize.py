@@ -71,6 +71,40 @@ def heuristic(inventory: dict) -> dict[str, dict]:
     return groups
 
 
+def apply_shared(groups: dict[str, dict], inventory: dict, use_rules: bool = True) -> None:
+    """Make every `shared: true` preset from the rules file part of ALL presets.
+
+    Runs after any grouping (built-in rules, an assistant's JSON, or an LLM) so the shared
+    the common set is never left to the grouper. Only items that are really in the inventory are added.
+    """
+    rules = load_rules()
+    shared = {n: r for n, r in rules.items() if r.get("shared")}
+    # use_rules=False (the sorting game): only the user's own picks fill the shared presets.
+    for name, rule in shared.items() if use_rules else []:
+        base = groups.setdefault(name, common.empty_preset(rule.get("description", ""), "audit:shared"))
+        for kind in ("brews", "casks"):
+            found = [n for n in inventory.get(kind, []) if _matches(rule, kind, n)]
+            base[kind] = sorted(set(base.get(kind) or []) | set(found))
+        have = {m["id"] for m in base.get("mas") or []}
+        base["mas"] = (base.get("mas") or []) + [
+            m for m in inventory.get("mas", [])
+            if m["id"] not in have and any(re.search(p, m["name"]) for p in rule.get("mas_patterns") or [])
+        ]
+        base["taps"] = common.taps_needed(base)
+    shared = {n: r for n, r in shared.items() if n in groups}
+    for name, group in list(groups.items()):
+        if name in shared or name in ("current_system", common.EXCLUDE_PRESET):  # exclusions must stay exactly what was excluded
+            continue
+        for src in shared:
+            for kind in ("brews", "casks"):
+                group[kind] = sorted(set(group.get(kind) or []) | set(groups[src].get(kind) or []))
+            known = {m["id"] for m in group.get("mas") or []}
+            group["mas"] = (group.get("mas") or []) + [m for m in groups[src].get("mas") or [] if m["id"] not in known]
+        group["taps"] = common.taps_needed(group)
+    for name in [n for n in shared if n in groups and not common.preset_size(groups[n])]:
+        del groups[name]  # nothing from the shared list is installed here
+
+
 def from_grouping(grouping: dict, inventory: dict, source: str) -> tuple[dict[str, dict], list[str]]:
     """Turn an assistant/LLM grouping into presets, dropping anything not in the inventory.
 

@@ -31,6 +31,9 @@ Needs macOS, `python3` (installed with the Xcode command line tools), and Homebr
 | `setup.sh audit [--ai] [--inventory-only] [--categorization FILE]` | Scan this Mac, write `data/inventory.json` and `data/presets.yaml` |
 | `setup.sh recommend --preset NAME [--source URL_OR_FILE]` | Tiered suggestions: very useful, nice to have, could be useful |
 | `setup.sh deploy [--preset NAME] [--exclude a,b] [--include-recs 1\|2\|3] [--dry-run] [--run]` | Preset to Brewfile to install command |
+| `setup.sh game [--categories a,b:key] [--redo] [--icons off]` | Sorting game: swipe through everything installed and pick a category for each, with descriptions and app icons |
+| `setup.sh verify [--apply] [--set CAT KEY...]` | Check presets for conflicts, deprecated packages and duplicates; place libraries with their dependents |
+| `setup.sh manual` | Write `data/manual-installs.md`: where to get apps Homebrew cannot install |
 | `setup.sh presets list\|show\|import\|export\|delete` | Manage presets, including importing someone else's Brewfile |
 | `setup.sh bootstrap` | Install Homebrew (with confirmation) and the Python environment |
 
@@ -58,6 +61,18 @@ The repo follows the same `SKILL.md` layout, with an `agents/openai.yaml` for th
 
 ChatGPT's skill packaging has changed more than once. If an upload is rejected, check OpenAI's current skill requirements; the core content (`SKILL.md`, `scripts/`, `references/`) does not depend on either vendor.
 
+## What is already tuned in this repo
+
+Checking this repo out gives you the configuration worked out here, not a blank slate:
+
+- `references/categories.yaml`: grouping rules, the shared `common` set, and consolidation (JetBrains IDEs and Android Studio become `jetbrains-toolbox`).
+- `references/overlaps.yaml`: tools that overlap (youtube-dl/yt-dlp and others), which `verify` reports.
+- `data/game_choices.json`: the sorting choices and category hotkeys (developer `d`, common `c`, photography `f`, gaming `g`, not_needed `x`). `setup.sh game` resumes from them, so only items it has not seen are asked about; `--redo` starts fresh.
+- `data/presets.yaml`, `data/inventory.json`: the presets built from those choices and the Mac they came from. `not_needed` is an exclusion list that `deploy` applies to every preset.
+- `data/manual_apps.json`, `data/manual-installs.md`: apps with no usable cask, where to get each one.
+
+Use `setup.sh --new-run ...` to start clean in `data/runs/<date_time>` without touching these files (that folder is git-ignored).
+
 ## Privacy
 
 `data/presets.yaml` lists everything you have installed and is meant to be committed so a new Mac can fetch it; use a private repo or review it first. `--ai` sends tool names (not file contents) to the provider you configure. API keys are read from the environment and are never written to disk.
@@ -66,10 +81,10 @@ ChatGPT's skill packaging has changed more than once. If an upload is rejected, 
 
 ```
 SKILL.md              instructions for the assistant
-scripts/              setup.sh + audit.py, categorize.py, recommend.py, deploy.py, presets.py, common.py, ai_skill.py
-references/           categories.yaml, recommended_seed.yaml, schemas.md, web-research.md
+scripts/              setup.sh + audit.py, game.py, verify.py, manual_apps.py, categorize.py, recommend.py, deploy.py, presets.py, common.py, ai_skill.py
+references/           categories.yaml, overlaps.yaml, recommended_seed.yaml, schemas.md, web-research.md
 agents/openai.yaml    ChatGPT skill UI metadata
-data/                 presets.yaml and generated files
+data/                 tuned presets, game choices, inventory, manual installs (runs/ is git-ignored)
 tests/run_tests.sh    end-to-end tests with a fake brew (installs nothing)
 ```
 

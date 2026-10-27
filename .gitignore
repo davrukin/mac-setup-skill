@@ -1,0 +1,15 @@
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local virtualenv created by scripts/setup.sh
+.venv/
+
+# macOS
+.DS_Store
+
+# Scratch runs from setup.sh --new-run
+data/runs/

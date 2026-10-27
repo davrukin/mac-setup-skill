@@ -1,3 +1,3 @@
 interface:
   display_name: "Mac Setup"
-  short_description: "Copy one Mac's apps and CLI tools onto a new Mac using Homebrew presets, with tiered recommendations."
+  short_description: "Sort one Mac's apps and CLI tools into presets (with a sorting game), verify them, and install them on a new Mac with Homebrew."

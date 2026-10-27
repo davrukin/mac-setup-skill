@@ -3,6 +3,16 @@
 # under patterns (matched against the formula/cask name, tap prefix removed).
 # mas_patterns are matched against Mac App Store app names.
 presets:
+  # `shared: true` presets are merged into every other preset, so each preset is
+  # self-contained when deployed on its own (and still listed separately as `common`).
+  common:
+    description: Tools every Mac gets, whatever its role
+    shared: true
+    casks:
+      - claude
+      - claude-code
+      - figma
+
   developer:
     description: Software engineering tools (editors, terminals, CLIs, containers, Android/iOS tooling)
     vscode: all
@@ -40,7 +50,6 @@ presets:
       - tower
       - dash
       - jetbrains-toolbox
-      - android-studio
       - android-platform-tools
       - android-commandlinetools
       - flutter
@@ -242,3 +251,27 @@ presets:
       - gnupg
     mas_patterns:
       - '(?i)magnet|amphetamine|things|bear|goodnotes|numbers|pages|keynote|1password|tailscale'
+
+# Families of apps that are installed through one launcher. Apps whose cask matches
+# cask_patterns, or whose bundle id starts with one of bundle_prefixes, are dropped from the
+# inventory and replaced by the target cask (listed under "consolidated" in inventory.json).
+consolidate:
+  jetbrains-toolbox:
+    cask_patterns:
+      - '^jetbrains-(?!toolbox$)'
+      - '^intellij-idea'
+      - '^pycharm'
+      - '^webstorm'
+      - '^goland'
+      - '^clion'
+      - '^rider$'
+      - '^datagrip'
+      - '^dataspell'
+      - '^phpstorm'
+      - '^rubymine'
+      - '^rustrover'
+      - '^aqua$'
+      - '^android-studio'   # also installable through Toolbox
+    bundle_prefixes:
+      - 'com.jetbrains.'
+      - 'com.google.android.studio'

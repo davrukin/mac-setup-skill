@@ -1,7 +1,35 @@
 #!/usr/bin/env bash
 # Stand-in for Homebrew used by tests/run_tests.sh. Never touches the real system.
 case "${1:-}" in
-  casks)    printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack; exit 0 ;;
+  update)   [ -n "${FAKE_BREW_STATE:-}" ] && rm -f "$FAKE_BREW_STATE/needs_update"; echo "fake brew: updated"; exit 0 ;;
+  casks)    { [ -n "${FAKE_BREW_NO_CASKS:-}" ] || { [ -n "${FAKE_BREW_STATE:-}" ] && [ -e "$FAKE_BREW_STATE/needs_update" ]; }; } && { echo; exit 0; }
+            printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack claude claude-code jetbrains-toolbox intellij-idea-ce darktable zoom microsoft-office microsoft-word; exit 0 ;;
+  info)
+    case "$*" in *--formula*)
+      cat <<'JSON'
+{"formulae": [
+ {"name": "git", "full_name": "git", "desc": "Distributed revision control system", "homepage": "https://git-scm.com", "installed": [{"installed_on_request": true, "runtime_dependencies": [{"full_name": "jq", "declared_directly": true}]}]},
+ {"name": "jq", "full_name": "jq", "desc": "Lightweight and flexible command-line JSON processor", "homepage": "https://jqlang.org", "installed": [{"installed_on_request": false, "runtime_dependencies": []}]},
+ {"name": "wget", "full_name": "wget", "desc": "Internet file retriever", "homepage": "", "installed": [{"installed_on_request": true, "runtime_dependencies": []}]}
+]}
+JSON
+      exit 0 ;;
+    esac
+    # `brew info --json=v2 --cask ...`: only the casks the audit tests care about.
+    cat <<'JSON'
+{"formulae": [], "casks": [
+ {"token": "microsoft-office", "deprecated": false, "disabled": false, "conflicts_with": {"cask": ["microsoft-word"]}, "artifacts": [{"pkg": ["office.pkg"]}]},
+ {"token": "microsoft-word", "deprecated": false, "disabled": false, "conflicts_with": {"cask": ["microsoft-office"]}, "artifacts": [{"app": ["Microsoft Word.app"]}]},
+ {"token": "iterm2", "desc": "Terminal emulator as alternative to Apple's Terminal app", "deprecated": false, "disabled": false, "artifacts": [{"app": ["iTerm.app"]}]},
+ {"token": "claude", "deprecated": false, "disabled": false, "artifacts": [{"uninstall": [{"quit": ["com.anthropic.claudefordesktop"]}]}, {"app": ["Claude.app"]}]},
+ {"token": "claude-code", "deprecated": false, "disabled": false, "artifacts": [{"binary": ["claude"]}]},
+ {"token": "jetbrains-toolbox", "deprecated": false, "disabled": false, "artifacts": [{"app": ["JetBrains Toolbox.app"]}]},
+ {"token": "intellij-idea-ce", "deprecated": true, "disabled": false, "artifacts": [{"app": ["IntelliJ IDEA CE.app"]}]},
+ {"token": "darktable", "deprecated": false, "disabled": true, "artifacts": [{"app": ["darktable.app"]}]},
+ {"token": "zoom", "deprecated": false, "disabled": false, "artifacts": [{"uninstall": [{"signal": ["KILL", "us.zoom.xos"], "delete": ["/Applications/zoom.us.app"]}]}, {"pkg": ["zoom.pkg"]}]}
+]}
+JSON
+    exit 0 ;;
   formulae) printf '%s\n' git jq ripgrep fd fzf gh exiftool ffmpeg imagemagick wget mas bat eza; exit 0 ;;
   bundle)
     sub="${2:-}"
@@ -19,6 +47,8 @@ brew "someone/tools/mytool"
 cask "visual-studio-code"
 cask "iterm2"
 cask "figma"
+cask "claude-code"
+cask "microsoft-office"
 mas "Xcode", id: 497799835
 mas "Pixelmator Pro", id: 1289583905
 vscode "ms-python.python"

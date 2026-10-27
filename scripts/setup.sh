@@ -4,11 +4,16 @@
 #   setup.sh                    interactive menu
 #   setup.sh bootstrap          install Homebrew (asks first) and the Python environment
 #   setup.sh audit [args]       scan this Mac, write presets      (run on the OLD Mac)
+#   setup.sh game [args]        sort apps into categories, swipe-style  (= audit --game)
 #   setup.sh deploy [args]      preset -> Brewfile -> install     (run on the NEW Mac)
 #   setup.sh recommend [args]   tiered suggestions for a preset
 #   setup.sh presets <cmd>      list | show | import | export | delete
+#   setup.sh verify [args]      check presets for conflicts, deprecated packages, duplicates; fix library placement
+#   setup.sh manual [args]      write data/manual-installs.md: where to get apps Homebrew cannot install
 #
 # Flags: -y/--yes  skip confirmation prompts.   --with-ai  install litellm for LLM features.
+#        --new-run  keep this run in its own folder, data/runs/YYYY-MM-DD_HHMMSS (fresh start, nothing reused).
+#        --data-dir PATH  use PATH instead of data/ (reuse the same PATH later for deploy, presets, recommend).
 # Env:   MAC_SETUP_SKIP_VENV=1  use the system python3 instead of creating .venv (tests, CI).
 set -euo pipefail
 
@@ -99,23 +104,33 @@ menu() {
 
 # ---- argument handling -----------------------------------------------------
 ARGS=()
-for a in ${@+"$@"}; do
-  case "$a" in
-    -y|--yes) YES=1 ;;
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -y|--yes) YES=1; export MAC_SETUP_YES=1 ;;
     --with-ai) WITH_AI=1 ;;
-    *) ARGS+=("$a") ;;
+    --new-run) export MAC_SETUP_DATA="${MAC_SETUP_DATA:-$ROOT/data}/runs/$(date +%Y-%m-%d_%H%M%S)" ;;
+    --data-dir) [ "$#" -ge 2 ] || die "--data-dir needs a path."; export MAC_SETUP_DATA="$2"; shift ;;
+    *) ARGS+=("$1") ;;
   esac
+  shift
 done
+if [ -n "${MAC_SETUP_DATA:-}" ]; then
+  mkdir -p "$MAC_SETUP_DATA"
+  info "📁 Using data folder: $MAC_SETUP_DATA"
+fi
 CMD="${ARGS[0]:-menu}"
 REST=(); [ "${#ARGS[@]}" -gt 1 ] && REST=("${ARGS[@]:1}")
 
 case "$CMD" in
   bootstrap) require_mac; ensure_brew; ensure_python; info "✅ Ready. Next: setup.sh audit (old Mac) or setup.sh deploy (new Mac)." ;;
   audit)     require_mac; ensure_python; run_py audit.py ${REST[@]+"${REST[@]}"} ;;
+  game)      require_mac; ensure_python; run_py audit.py --game ${REST[@]+"${REST[@]}"} ;;
   deploy)    require_mac; ensure_brew; ensure_python; run_py deploy.py ${REST[@]+"${REST[@]}"} ;;
   recommend) ensure_python; run_py recommend.py ${REST[@]+"${REST[@]}"} ;;
+  verify)    ensure_python; run_py verify.py ${REST[@]+"${REST[@]}"} ;;
+  manual)    ensure_python; run_py manual_apps.py ${REST[@]+"${REST[@]}"} ;;
   presets)   ensure_python; run_py presets.py ${REST[@]+"${REST[@]}"} ;;
   menu)      ensure_python; menu ;;
-  -h|--help|help) sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
+  -h|--help|help) sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
   *) die "Unknown command '$CMD'. Try: setup.sh --help" ;;
 esac
