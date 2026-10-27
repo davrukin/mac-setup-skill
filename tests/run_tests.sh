@@ -220,6 +220,8 @@ MAC_SETUP_DATA="$TMP/sa" python3 "$SCRIPTS/deploy.py" --preset developer --no-re
 check "deploy leaves Setapp casks to Setapp" bash -c "grep -q 'belong to Setapp' '$TMP/sa.out' && ! grep -q '^cask \"iterm2\"' '$TMP/sa.out'"
 
 echo "== missing and relocate =="
+for d in Apps Apps2 Apps3; do printf 'folders:\n  - folder: %s/%s/ArtCraft\n    casks: [cadcraft]\n' "$TMP" "$d" > "$TMP/folders-$d.yaml"; done
+export MAC_SETUP_FOLDERS_FILE="$TMP/folders-Apps.yaml"
 mkdir -p "$TMP/ms" "$TMP/Apps/CADCraft.app/Contents" "$TMP/Apps/Ghost.app/Contents" "$TMP/Apps/Soulver.app/Contents"
 cat > "$TMP/ms/presets.yaml" <<'YAML'
 presets:
@@ -242,21 +244,24 @@ check "relocate shows the plan and moves nothing" bash -c "grep -q 'cadcraft' '$
 check "relocate sorts Setapp apps by situation" bash -c "sed -n '/only outside Setapp/,/also have/p' '$TMP/rel1.out' | grep -q Ghost && sed -n '/also have/,\$p' '$TMP/rel1.out' | grep -q Soulver"
 MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply > "$TMP/rel2.out"
 check "relocate --apply moves the app into its folder and adopts it" bash -c "[ -d '$TMP/Apps/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps/CADCraft.app' ] && grep -q 'install --cask --adopt cadcraft' '$TMP/rel2.out'"
+MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --skip-update > "$TMP/rel2b.out"
+check "relocate lists apps already in their folder" grep -q "already in their folder (1): cadcraft" "$TMP/rel2b.out"
 check "relocate never moves Setapp apps" bash -c "[ -d '$TMP/Apps/Ghost.app' ] && [ -d '$TMP/Apps/Soulver.app' ]"
 
 # Out-of-date Homebrew: the cask definition names no folder, so references/folders.yaml says where it belongs.
 mkdir -p "$TMP/Apps2/CADCraft.app/Contents"
-cat > "$TMP/folders.yaml" <<YAML
-folders:
-  - folder: $TMP/Apps2/ArtCraft
-    casks: [cadcraft]
-YAML
-FAKE_BREW_NO_TARGET=1 MAC_SETUP_FOLDERS_FILE="$TMP/folders.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps2" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply > "$TMP/rel3.out"
+FAKE_BREW_NO_TARGET=1 MAC_SETUP_FOLDERS_FILE="$TMP/folders-Apps2.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps2" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply > "$TMP/rel3.out"
 check "stale definitions are reported, not guessed at, and the app stays put" bash -c "[ -d '$TMP/Apps2/CADCraft.app' ] && [ ! -d '$TMP/Apps2/ArtCraft' ] && grep -q 'cannot be linked yet' '$TMP/rel3.out'"
 check "relocate runs brew update first unless told not to" grep -q "Updating Homebrew" "$TMP/rel3.out"
+# The real-world trap: an old definition still reports /Applications/CADCraft.app, where the loose app sits,
+# so it must not be treated as "already in place".
+mkdir -p "$TMP/Apps4/CADCraft.app/Contents"
+printf 'folders:\n  - folder: %s/Apps4/ArtCraft\n    casks: [cadcraft]\n' "$TMP" > "$TMP/folders-Apps4.yaml"
+FAKE_BREW_ROOT_TARGET=1 MAC_SETUP_FOLDERS_FILE="$TMP/folders-Apps4.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps4" MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --skip-update > "$TMP/rel5.out"
+check "an old definition that reports the loose path is not mistaken for 'in place'" bash -c "! grep -q 'already in their folder' '$TMP/rel5.out' && grep -q 'cannot be linked yet' '$TMP/rel5.out' && grep -q 'cadcraft' '$TMP/rel5.out'"
 # Installed by Homebrew: move, drop the old record, adopt at the new path.
 mkdir -p "$TMP/Apps3/CADCraft.app/Contents"
-FAKE_BREW_INSTALLED=cadcraft MAC_SETUP_APP_DIRS="$TMP/Apps3" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply --skip-update > "$TMP/rel4.out"
+FAKE_BREW_INSTALLED=cadcraft MAC_SETUP_FOLDERS_FILE="$TMP/folders-Apps3.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps3" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply --skip-update > "$TMP/rel4.out"
 check "a Homebrew-installed app is moved, its old record dropped and re-adopted" bash -c "[ -d '$TMP/Apps3/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps3/CADCraft.app' ] && grep -q 'uninstall --cask cadcraft' '$TMP/rel4.out' && grep -q 'install --cask --adopt cadcraft' '$TMP/rel4.out'"
 
 echo "== no Homebrew on PATH =="
