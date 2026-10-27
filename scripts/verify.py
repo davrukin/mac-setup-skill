@@ -281,6 +281,7 @@ def main() -> None:
                 changes.update({k: f["fix"]["category"] for k in f["fix"]["keys"]})
         changes.update({m["key"]: m["to"] for m in moves})
 
+    print("\nBefore any changes:" if changes else "")
     print_findings(findings)
     if moves:
         print("\n📚 Library placement (a tool should be available wherever the tools that need it are):")
@@ -295,10 +296,9 @@ def main() -> None:
         print(f"\n✅ Applied {len(changes)} change(s) to game_choices.json and rebuilt {common.PRESETS_FILE}:")
         for key, category in sorted(changes.items()):
             print(f"   {key} -> {category}")
-        after = [f for f in verify_presets(merged) if f["severity"] == "error"]
-        print(f"   {len(after)} install-breaking problem(s) remain." if after else "   No install-breaking problems remain.")
-        for f in after:
-            print(f"   {ICON['error']} {f['message']}")
+        after = verify_presets(merged)
+        print(f"\nAfter the changes: {summary(after)}.")
+        print_findings(after)
     elif (findings and any(f["fix"] for f in findings)) or moves:
         print("Run again with --apply to fix what can be fixed automatically, or --set CATEGORY KEY... for the rest.")
     sys.exit(1 if any(f["severity"] == "error" for f in findings) and not changes else 0)
