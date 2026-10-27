@@ -91,9 +91,14 @@ def main() -> None:
     preset = store[name]
 
     excludes = {e.strip() for e in args.exclude.split(",") if e.strip()}
+    if name != common.EXCLUDE_PRESET:
+        marked = common.exclusion_names(store)
+        if marked:
+            print(f"🚫 Leaving out everything in the '{common.EXCLUDE_PRESET}' preset ({len(marked)} names).")
+        excludes |= marked
     if excludes:
         preset, removed = apply_excludes(preset, excludes)
-        print(f"➖ Excluded {len(removed)} item(s): {', '.join(removed) or 'none matched'}")
+        print(f"➖ Excluded {len(removed)} item(s) from this preset: {', '.join(removed) or 'none matched'}")
 
     interactive = sys.stdin.isatty() and not args.preset
     if not args.no_recs:

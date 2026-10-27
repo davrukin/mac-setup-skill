@@ -177,6 +177,22 @@ def _token_set(subcommand: str) -> set[str] | None:
     return _TOKEN_CACHE[subcommand]
 
 
+EXCLUDE_PRESET = "not_needed"  # items in this preset are never deployed from any other preset
+
+
+def exclusion_names(presets: dict) -> set[str]:
+    """Names of everything in the `not_needed` preset, in the form deploy's --exclude understands."""
+    preset = presets.get(EXCLUDE_PRESET)
+    if not preset:
+        return set()
+    preset = normalize_preset(preset)
+    names = set(preset["brews"]) | set(preset["casks"]) | set(preset["vscode"])
+    names |= {short_name(n) for n in preset["brews"]}
+    for m in preset["mas"]:
+        names |= {m["name"], str(m["id"])}
+    return names
+
+
 def reset_token_cache() -> None:
     """Forget cached `brew casks` / `brew formulae` results (after `brew update`)."""
     global _CASK_INDEX, _CASK_INDEX_LOADED
