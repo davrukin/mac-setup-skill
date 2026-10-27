@@ -16,11 +16,12 @@ import audit
 import common
 
 
-def scan() -> tuple[list[str], list[str]]:
+def scan() -> tuple[list[str], list[str], dict[str, str]]:
     index = common.cask_index()
     known = common.available_casks()
     apps: list[str] = []
     casks: list[str] = []
+    mapping: dict[str, str] = {}
     seen = set()
     for root in audit.app_dirs():
         for app in audit.iter_apps(root):
@@ -30,15 +31,16 @@ def scan() -> tuple[list[str], list[str]]:
             apps.append(app.stem)
             tokens = audit.resolve_casks(app.stem, audit.bundle_id(app), index, known)
             usable = [t for t in tokens if not index or t not in index["unusable"]]
+            mapping[app.stem] = usable[0] if usable else ""
             if usable:
                 casks.append(usable[0])
-    return sorted(apps, key=str.lower), sorted(set(casks))
+    return sorted(apps, key=str.lower), sorted(set(casks)), dict(sorted(mapping.items(), key=lambda kv: kv[0].lower()))
 
 
 def main() -> None:
     inventory = json.loads(common.INVENTORY_FILE.read_text(encoding="utf-8"))
-    apps, casks = scan()
-    inventory["setapp_apps"], inventory["setapp_casks"] = apps, casks
+    apps, casks, mapping = scan()
+    inventory["setapp_apps"], inventory["setapp_casks"], inventory["setapp_map"] = apps, casks, mapping
     common.INVENTORY_FILE.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
     print(f"Setapp apps found: {len(apps)}; Homebrew casks they would collide with: {len(casks)}")
     for a in apps:

@@ -233,7 +233,7 @@ presets:
     description: test
     casks: [cadcraft]
 YAML
-echo '{"setapp_apps": ["Soulver", "Ghost"], "setapp_casks": []}' > "$TMP/ms/inventory.json"
+echo '{"setapp_apps": ["Soulver", "Ghost", "Bartender", "Zed"], "setapp_casks": ["bartender"], "setapp_map": {"Bartender": "bartender"}}' > "$TMP/ms/inventory.json"
 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/missing.py" --preset dev > "$TMP/miss.out"
 check "missing lists absent items and separates apps present outside Homebrew" bash -c "sed -n '/^Missing/,\$p' '$TMP/miss.out' | grep -q ripgrep && grep -q 'Present but not installed by Homebrew' '$TMP/miss.out' && ! sed -n '/^Missing/,\$p' '$TMP/miss.out' | grep -q iterm2"
 check "missing without --install installs nothing" bash -c "! grep -q 'fake brew: install' '$TMP/miss.out'"
@@ -241,11 +241,16 @@ MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/missing.py" --preset 
 check "missing --install installs only the missing items" bash -c "grep -q 'fake brew: install ripgrep' '$TMP/miss2.out' && ! grep -q 'install --cask iterm2' '$TMP/miss2.out'"
 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" > "$TMP/rel1.out"
 check "relocate shows the plan and moves nothing" bash -c "grep -q 'cadcraft' '$TMP/rel1.out' && [ -d '$TMP/Apps/CADCraft.app' ] && [ ! -d '$TMP/Apps/ArtCraft' ]"
-check "relocate sorts Setapp apps by situation" bash -c "sed -n '/only outside Setapp/,/also have/p' '$TMP/rel1.out' | grep -q Ghost && sed -n '/also have/,\$p' '$TMP/rel1.out' | grep -q Soulver"
+check "relocate lists every Setapp app in the category by state on this Mac" bash -c "grep -q 'Setapp apps in your category: 4' '$TMP/rel1.out' && grep -q 'installed some other way (left alone) (1): Ghost' '$TMP/rel1.out' && grep -q 'not installed on this Mac (2): Bartender, Zed' '$TMP/rel1.out' && grep -q 'already in the Setapp folder (1): Soulver' '$TMP/rel1.out'"
+check "a to-install list is written without the app already in Setapp" bash -c "f='$TMP/ms/setapp-to-install.md'; grep -q Ghost \$f && grep -q Zed \$f && grep -q Bartender \$f && ! grep -q Soulver \$f"
 MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply > "$TMP/rel2.out"
 check "relocate --apply moves the app into its folder and adopts it" bash -c "[ -d '$TMP/Apps/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps/CADCraft.app' ] && grep -q 'install --cask --adopt cadcraft' '$TMP/rel2.out'"
 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --skip-update > "$TMP/rel2b.out"
 check "relocate lists apps already in their folder" grep -q "already in their folder (1): cadcraft" "$TMP/rel2b.out"
+FAKE_BREW_INSTALLED=bartender MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply --skip-update > "$TMP/rel6.out"
+check "a Homebrew-installed Setapp app is shown and removed by default" bash -c "grep -q 'installed by Homebrew, to be removed (1): Bartender' '$TMP/rel6.out' && grep -q 'uninstall --cask bartender' '$TMP/rel6.out' && grep -q 'a Homebrew copy was removed' '$TMP/ms/setapp-to-install.md'"
+FAKE_BREW_INSTALLED=bartender MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply --skip-update --keep-homebrew-setapp > "$TMP/rel7.out"
+check "--keep-homebrew-setapp leaves it installed" bash -c "! grep -q 'uninstall --cask bartender' '$TMP/rel7.out'"
 check "relocate never moves Setapp apps" bash -c "[ -d '$TMP/Apps/Ghost.app' ] && [ -d '$TMP/Apps/Soulver.app' ]"
 
 # Out-of-date Homebrew: the cask definition names no folder, so references/folders.yaml says where it belongs.

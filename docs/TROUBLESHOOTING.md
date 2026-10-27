@@ -29,9 +29,11 @@ Setapp licenses its apps through its own app, so installing the same app with Ho
 
 For an inventory made before this existed, run `scripts/setup.sh setapp` once.
 
-`scripts/setup.sh relocate` also lists Setapp apps that are installed only outside Setapp, and those with a second copy outside the Setapp folder. It does not move them: Setapp records a license when it installs an app itself, and putting an app in its folder does not register anything. Add `--apply --uninstall-homebrew-copies` to remove the Homebrew casks of those apps (data kept) before you add them from Setapp.
+`scripts/setup.sh relocate` lists **every Setapp app in your category** (the Setapp apps recorded in `inventory.json` from the Mac you audited), with its state on this Mac: installed by Homebrew, installed some other way, already in the Setapp folder, or not installed. It writes `data/setapp-to-install.md`, a checklist of the ones to add yourself. It never moves or installs Setapp apps, because Setapp records a license only for an app it installs itself.
 
-If you installed some through Homebrew already, remove them with `brew uninstall --cask NAME` (this keeps your data) and add them from Setapp.
+With `--apply` it removes the Homebrew-installed copies (`brew uninstall --cask`, never `--zap`, so your data stays) and asks first. Add `--keep-homebrew-setapp` to leave them. Then open Setapp, sign in, and install and license the apps on the checklist.
+
+If you did this by hand: `brew uninstall --cask NAME` keeps your data, and then you add the app from Setapp.
 
 ## "No downloads initiated for ADAM ID ..."
 
