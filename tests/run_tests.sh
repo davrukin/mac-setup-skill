@@ -124,6 +124,17 @@ MAC_SETUP_DATA="$TMP/game2" MAC_SETUP_GAME_KEYS="q" python3 "$SCRIPTS/audit.py" 
 check "categories made in-game are remembered on the next run" py "
 import json;s=json.load(open('$TMP/game2/game_choices.json'));assert s['categories']['creative']=='r'"
 
+echo "== manual installs document =="
+cat > "$TMP/manual.json" <<'JSON'
+{"generated": "2026-10-26", "classified_by": "test", "entries": [
+ {"apps": ["Weird Tool"], "category": "developer", "source": "vendor", "url": "https://example.com/weird", "verified": true, "note": "n"},
+ {"apps": ["Ghost App"], "category": "not_needed", "source": "discontinued"}]}
+JSON
+python3 "$SCRIPTS/manual_apps.py" --input "$TMP/manual.json" --output "$TMP/manual.md" > "$TMP/manual.out"
+check "document lists classified apps with links" bash -c "grep -q 'Weird Tool' '$TMP/manual.md' && grep -q '(https://example.com/weird)' '$TMP/manual.md'"
+check "unclassified inventory apps are flagged" bash -c "grep -q 'Not classified yet' '$TMP/manual.md' && grep -q 'Adobe Thing' '$TMP/manual.md' && grep -q 'not classified yet' '$TMP/manual.out'"
+check "stale entries are reported" grep -q "Ghost App" "$TMP/manual.out"
+
 echo "== missing Homebrew cask list =="
 check "audit stops with a fix when brew's cask list is empty" bash -c "FAKE_BREW_NO_CASKS=1 MAC_SETUP_DATA='$TMP/nocasks' python3 '$SCRIPTS/audit.py' 2>&1 | grep -q 'brew update'; [ \${PIPESTATUS[0]} -ne 0 ]"
 mkdir -p "$TMP/state" && touch "$TMP/state/needs_update"
