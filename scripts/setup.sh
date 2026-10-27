@@ -11,6 +11,8 @@
 #   setup.sh recommend [args]   tiered suggestions for a preset
 #   setup.sh presets <cmd>      list | show | import | export | delete | exclude | include | excludes
 #   setup.sh verify [args]      check presets for conflicts, deprecated packages, duplicates; fix library placement
+#   setup.sh missing [args]     list what a preset should have installed but does not; --install tries it
+#   setup.sh relocate [args]    move casks that install into a folder (e.g. ArtCraft) into it; list apps that must come from Setapp
 #   setup.sh setapp             record which apps run through Setapp, so deploy leaves them to Setapp
 #   setup.sh manual [args]      write data/manual-installs.md: where to get apps Homebrew cannot install
 #
@@ -136,6 +138,8 @@ case "$CMD" in
   deploy)    require_mac; ensure_brew; ensure_python; run_py deploy.py ${REST[@]+"${REST[@]}"} ;;
   recommend) ensure_python; run_py recommend.py ${REST[@]+"${REST[@]}"} ;;
   verify)    ensure_python; run_py verify.py ${REST[@]+"${REST[@]}"} ;;
+  missing)   ensure_python; run_py missing.py ${REST[@]+"${REST[@]}"} ;;
+  relocate)  ensure_python; run_py relocate.py ${REST[@]+"${REST[@]}"} ;;
   setapp)    ensure_python; run_py setapp.py ${REST[@]+"${REST[@]}"} ;;
   manual)    ensure_python; run_py manual_apps.py ${REST[@]+"${REST[@]}"} ;;
   presets)   ensure_python; run_py presets.py ${REST[@]+"${REST[@]}"} ;;
