@@ -54,7 +54,11 @@ load_brew_env() {
 
 ensure_brew() {
   if command -v brew >/dev/null 2>&1; then info "✅ Homebrew is ready."; return 0; fi
-  if load_brew_env; then info "✅ Homebrew found and added to PATH for this run."; return 0; fi
+  if load_brew_env; then
+    info "✅ Homebrew is installed but this terminal had not loaded it; using it for this run. Nothing needs reinstalling."
+    info "   To fix the terminal: open a new window, or add this line to ~/.zprofile:  eval \"\$($(command -v brew) shellenv)\""
+    return 0
+  fi
   info "🍺 Homebrew is not installed."
   confirm "Download and run the official Homebrew installer from raw.githubusercontent.com/Homebrew/install?" || die "Homebrew is required for this step."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
