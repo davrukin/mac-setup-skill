@@ -148,6 +148,7 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
     adopted, unmatched, mas_apps, apple = [], [], [], 0
     setapp_apps: list[str] = []
     setapp_casks: list[str] = []
+    setapp_map: dict[str, str] = {}
     consolidated: dict[str, list[str]] = {}
     seen = set()
     for root in app_dirs():
@@ -168,6 +169,7 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
                 # Setapp licenses these through its own app; installing the Homebrew cask would leave Setapp unaware of them.
                 setapp_apps.append(name)
                 usable = [t for t in tokens if t not in unusable]
+                setapp_map[name] = usable[0] if usable else ""
                 if usable:
                     setapp_casks.append(usable[0])
                 continue
@@ -196,6 +198,7 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
         "apple_apps_skipped": apple,
         "setapp_apps": sorted(set(setapp_apps), key=str.lower),
         "setapp_casks": sorted(set(setapp_casks)),
+        "setapp_map": dict(sorted(setapp_map.items(), key=lambda kv: kv[0].lower())),
         "consolidated": {t: sorted(set(v), key=str.lower) for t, v in consolidated.items()},
     }
 
