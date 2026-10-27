@@ -93,7 +93,7 @@ def apply_shared(groups: dict[str, dict], inventory: dict, use_rules: bool = Tru
         base["taps"] = common.taps_needed(base)
     shared = {n: r for n, r in shared.items() if n in groups}
     for name, group in list(groups.items()):
-        if name in shared or name == "current_system":
+        if name in shared or name in ("current_system", common.EXCLUDE_PRESET):  # exclusions must stay exactly what was excluded
             continue
         for src in shared:
             for kind in ("brews", "casks"):
