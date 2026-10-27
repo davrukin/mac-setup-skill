@@ -10,10 +10,10 @@
      - not installed by Homebrew: move the app, then `brew install --cask --adopt NAME`.
      Neither downloads anything. They need Homebrew's current definition of the cask to name the folder, so
      it runs `brew update` first; apps whose definition still names none are listed as "cannot be linked yet".
-2. Setapp apps. They are NOT moved: Setapp records a license when it installs an app itself, and putting an
-   app into its folder does not make Setapp aware of it. The script lists the Setapp apps that are installed
-   some other way, so you can add them from Setapp; --uninstall-homebrew-copies removes the Homebrew casks of
-   those apps first (your data stays, because it never uses --zap).
+2. Setapp apps. They are never moved or installed: Setapp records a license only for an app it installs
+   itself. The script lists every Setapp app in your category (from inventory.json) with its state on this Mac,
+   writes data/setapp-to-install.md for you to work through, and with --apply removes the Homebrew-installed
+   copies (`brew uninstall --cask`, never --zap, so your data stays). --keep-homebrew-setapp skips the removal.
 
 It only prints what it would do, unless you add --apply.
 """
@@ -102,22 +102,45 @@ def plan_casks(candidates: list[str], managed: set[str]) -> tuple[list[dict], di
     return steps, status
 
 
-def plan_setapp(managed: set[str]) -> dict:
-    """Setapp apps by situation: only outside Setapp, or also outside it (an extra copy), plus Homebrew casks among them."""
+def plan_setapp(managed: set[str]) -> list[dict]:
+    """Every Setapp app in the category (the audited Mac's Setapp apps), with its state on THIS Mac:
+    homebrew (a cask installed it: to be removed), outside (present, but not through Setapp),
+    setapp (already in the Setapp folder), absent (not installed). Each entry also says which cask it is."""
     try:
         inventory = json.loads(common.INVENTORY_FILE.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return {"only_outside": [], "extra_copy": [], "brew_copies": []}
-    only_outside, extra_copy = [], []
+        return []
+    mapping = inventory.get("setapp_map", {})
+    known = set(inventory.get("setapp_casks", []))
+    out = []
     for name in inventory.get("setapp_apps", []):
+        # The cask recorded on the audited Mac, else any installed cask named like the app (Bartender -> bartender).
+        cask = mapping.get(name) or next((c for c in common.cask_candidates(name) if c in managed or c in known), "")
         loose = any((root / f"{name}.app").exists() for root in audit.app_dirs())
         in_setapp = any((root / "Setapp" / f"{name}.app").exists() for root in audit.app_dirs())
-        if loose and in_setapp:
-            extra_copy.append(name)
+        if cask and cask in managed:
+            state = "homebrew"
+        elif in_setapp:
+            state = "setapp"
         elif loose:
-            only_outside.append(name)
-    brew_copies = sorted(set(inventory.get("setapp_casks", [])) & managed)
-    return {"only_outside": only_outside, "extra_copy": extra_copy, "brew_copies": brew_copies}
+            state = "outside"
+        else:
+            state = "absent"
+        out.append({"app": name, "cask": cask, "state": state, "also_in_setapp": in_setapp})
+    return out
+
+
+def write_setapp_list(apps: list[dict]) -> Path:
+    todo = [a for a in apps if a["state"] != "setapp"]
+    lines = ["# Setapp apps to install and license yourself", "",
+             "Open Setapp, sign in, and install each of these from inside it. Setapp only records a license for an app it installs "
+             "itself, so these are not installed or moved by the scripts.", ""]
+    lines += [f"- [ ] {a['app']}" + ("  _(a Homebrew copy was removed)_" if a["state"] == "homebrew" else "") for a in todo]
+    if not todo:
+        lines.append("Everything is already installed through Setapp.")
+    path = common.DATA_DIR / "setapp-to-install.md"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
 
 
 def run_step(label: str, cmd: list[str]) -> bool:
@@ -129,8 +152,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--apply", action="store_true", help="do it (default: only show the plan)")
     ap.add_argument("--skip-update", action="store_true", help="do not run `brew update` first")
-    ap.add_argument("--uninstall-homebrew-copies", action="store_true",
-                    help="with --apply: `brew uninstall --cask` the Homebrew copies of Setapp apps, so you can add them from Setapp")
+    ap.add_argument("--keep-homebrew-setapp", action="store_true",
+                    help="with --apply: leave the Homebrew copies of Setapp apps installed (by default they are removed)")
     args = ap.parse_args()
     common.require_brew("finding apps in the wrong folder")
 
@@ -143,7 +166,7 @@ def main() -> None:
     print("🔍 Looking for apps in the wrong folder...", flush=True)
     steps, status = plan_casks(candidates, managed)
     setapp = plan_setapp(managed)
-    outside, extra, brew_copies = setapp["only_outside"], setapp["extra_copy"], setapp["brew_copies"]
+    brew_copies = [a["cask"] for a in setapp if a["state"] == "homebrew"]
 
     found = sum(len(v) for v in status.values())
     print(f"\n📁 Apps with a home folder: {found} checked")
@@ -159,22 +182,24 @@ def main() -> None:
                "adopt": "move, then brew install --cask --adopt",
                "stale": "cannot be linked yet: Homebrew's definition has no folder; run brew update and try again"}[s["kind"]]
         print(f"  • {s['cask']}: {s['from']} → {s['to']}   ({how})")
-    print(f"\n🧩 Setapp apps installed only outside Setapp: {len(outside)}")
-    for name in outside:
-        print(f"  • {name}")
-    if outside:
-        print("   These were not moved: Setapp only knows an app it installed itself. Add them from inside Setapp.")
-    if extra:
-        print(f"\n🧩 Setapp apps that also have a separate copy outside the Setapp folder: {len(extra)}")
-        for name in extra:
-            print(f"  • {name}")
-    if brew_copies:
-        print(f"\n🍺 Homebrew casks of Setapp apps: {', '.join(brew_copies)}")
+    def names(state: str) -> list[str]:
+        return [a["app"] for a in setapp if a["state"] == state]
+
+    print(f"\n🧩 Setapp apps in your category: {len(setapp)}")
+    for state, label in (("homebrew", "🍺 installed by Homebrew, to be removed"),
+                         ("outside", "⚠️  installed some other way (left alone)"),
+                         ("setapp", "✅ already in the Setapp folder"),
+                         ("absent", "➖ not installed on this Mac")):
+        if names(state):
+            print(f"  {label} ({len(names(state))}): {', '.join(names(state))}")
+    print(f"  📝 To install from Setapp yourself: {sum(1 for a in setapp if a['state'] != 'setapp')} (list in {write_setapp_list(setapp)})")
+    if not setapp:
+        print("  (This inventory has no Setapp apps. Run `scripts/setup.sh setapp` on the Mac where Setapp is installed.)")
 
     if not args.apply:
         print("\nNothing changed. Quit the apps listed, then run again with --apply.")
         return
-    if not steps and not (args.uninstall_homebrew_copies and brew_copies):
+    if not steps and not (brew_copies and not args.keep_homebrew_setapp):
         return
 
     failed = 0
@@ -207,14 +232,15 @@ def main() -> None:
                 ok = False
             print("   ✅ done" if ok else "   ❌ failed")
             failed += 0 if ok else 1
-    if args.uninstall_homebrew_copies and brew_copies and common.confirm(
-            f"\nUninstall the {len(brew_copies)} Homebrew copies of Setapp apps (data is kept)?"):
+    if brew_copies and not args.keep_homebrew_setapp and common.confirm(
+            f"\nRemove the {len(brew_copies)} Homebrew copies of Setapp apps so you can install them from Setapp? (Your data is kept.)"):
         for token in brew_copies:
             print(f"\n→ {token}", flush=True)
             if not run_step("uninstall", ["brew", "uninstall", "--cask", token]):
                 failed += 1
-    if outside:
-        print("\nNext: open Setapp, sign in, and install these from there:\n  " + ", ".join(outside))
+    todo = [a["app"] for a in setapp if a["state"] != "setapp"]
+    if todo:
+        print("\nNext: open Setapp, sign in, and install and license these yourself:\n  " + ", ".join(todo))
     sys.exit(1 if failed else 0)
 
 

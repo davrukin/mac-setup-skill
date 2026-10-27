@@ -16,3 +16,4 @@ data/runs/
 
 # Install logs written by deploy --run
 data/logs/
+data/setapp-to-install.md
