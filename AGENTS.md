@@ -11,3 +11,4 @@ Quick facts for agents that read only this file:
 - Never run `deploy --run` without showing the user the dry-run output and getting a go-ahead.
 - After editing any script, run `bash tests/run_tests.sh`. It uses a fake `brew` and installs nothing.
 - Commit frequently, as the user requires: make a small commit after each logical change (one concern per commit, with a descriptive message explaining what and why), on the current branch. Do not batch unrelated edits into one commit, and do not leave finished work uncommitted.
+- Use a branched workflow: do all work on a feature branch (never commit directly to `main`), and bring it into `main` with a merge commit, `git merge --no-ff <branch>`, so each branch stays visible in history. Do not fast-forward, squash or rebase the merge. Run `bash tests/run_tests.sh` before merging, and push `main` and the branch afterwards.
