@@ -44,6 +44,8 @@ app("zoom.us.app", "us.zoom.xos")                       # .pkg cask, matched via
 app("Microsoft Word.app", "com.microsoft.Word")             # belongs to the installed microsoft-office suite
 app("Safari.app", "com.apple.Safari")                  # Apple first-party -> skipped
 app("Xcode.app", "com.apple.dt.Xcode", mas=True)
+app("Setapp/Raycast.app", "com.raycast.macos")         # in a Setapp folder and a cask exists -> Setapp's, not Homebrew's
+app("Setapp/Soulver.app", "com.acqualia.soulver")      # in a Setapp folder, no cask
 PY
 
 PRESETS="$MAC_SETUP_DATA/presets.yaml"
@@ -55,6 +57,10 @@ check "current_system has adopted google-chrome" py "
 import yaml;p=yaml.safe_load(open('$PRESETS'))['presets']['current_system'];assert 'google-chrome' in p['casks']"
 check "no duplicate cask for managed apps (iterm, vscode)" py "
 import yaml;c=yaml.safe_load(open('$PRESETS'))['presets']['current_system']['casks'];assert sorted(c)==sorted(set(c));assert 'iterm' not in c and 'visual-studio-code' in c and c.count('iterm2')==1"
+check "Setapp apps are recorded, not adopted or listed as unmatched" py "
+import json,yaml;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert i['setapp_apps']==['Raycast','Soulver'],i['setapp_apps'];assert i['setapp_casks']==['raycast'],i['setapp_casks']
+assert 'Soulver' not in i['unmatched_apps'] and 'raycast' not in i['casks']
+assert 'raycast' not in yaml.safe_load(open('$PRESETS'))['presets']['current_system']['casks']"
 check "unmatched apps reported, not guessed into casks" py "
 import json,yaml;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert set(i['unmatched_apps'])=={'Weird Tool','Adobe Thing','darktable'},i['unmatched_apps']
 c=yaml.safe_load(open('$PRESETS'))['presets']['current_system']['casks'];assert 'weird-tool' not in c and 'safari' not in c"
@@ -207,6 +213,11 @@ check "failures are explained and listed" bash -c "grep -q 'failing-tool explode
 check "a failed list is saved" bash -c "ls '$MAC_SETUP_DATA'/logs/failcase-*.failed.txt >/dev/null"
 check "items after a failure still install" grep -q "fake brew: install git" "$TMP/fail.out"
 check "non-interactive run without --preset fails clearly" bash -c "! python3 '$SCRIPTS/deploy.py' < /dev/null 2>'$TMP/err.out' && grep -q -- '--preset' '$TMP/err.out'"
+
+mkdir -p "$TMP/sa" && cp "$MAC_SETUP_DATA/presets.yaml" "$TMP/sa/" && python3 -c "
+import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));i['setapp_casks']=['iterm2'];json.dump(i,open('$TMP/sa/inventory.json','w'))"
+MAC_SETUP_DATA="$TMP/sa" python3 "$SCRIPTS/deploy.py" --preset developer --no-recs --dry-run > "$TMP/sa.out"
+check "deploy leaves Setapp casks to Setapp" bash -c "grep -q 'belong to Setapp' '$TMP/sa.out' && ! grep -q '^cask \"iterm2\"' '$TMP/sa.out'"
 
 echo "== verification =="
 check "conflicts, disabled, deprecated, duplicates and overlaps are found" py "
