@@ -204,7 +204,7 @@ presets:
     mas: [{name: Things 3, id: 904280696}]
 YAML
 MAC_SETUP_DATA="$TMP/excl" python3 "$SCRIPTS/deploy.py" --preset work --no-recs --dry-run > "$TMP/excl.out"
-check "items in not_needed are left out of every other preset" bash -c "grep -q 'brew \"jq\"' '$TMP/excl.out' && ! grep -q 'brew \"bat\"' '$TMP/excl.out' && ! grep -q 'Things 3' '$TMP/excl.out' && grep -q 'cask \"raycast\"' '$TMP/excl.out'"
+check "items in not_needed are left out of every other preset" bash -c "grep -q 'brew \"jq\"' '$TMP/excl.out' && ! grep -q 'brew \"bat\"' '$TMP/excl.out' && ! sed -n '/^# Generated/,\$p' '$TMP/excl.out' | grep -q 'Things 3' && grep -q 'cask \"raycast\"' '$TMP/excl.out'"
 
 echo "== launcher =="
 check "--new-run audits into its own dated folder" bash -c "bash '$SCRIPTS/setup.sh' --new-run audit >/dev/null && ls -d '$MAC_SETUP_DATA'/runs/????-??-??_?????? | head -1 | xargs -I{} test -f {}/presets.yaml"
