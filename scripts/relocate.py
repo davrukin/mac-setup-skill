@@ -98,6 +98,7 @@ def main() -> None:
     ap.add_argument("--uninstall-homebrew-copies", action="store_true",
                     help="with --apply: `brew uninstall --cask` the Homebrew copies of Setapp apps, so you can add them from Setapp")
     args = ap.parse_args()
+    common.require_brew("finding apps in the wrong folder")
 
     managed = {ln.strip() for ln in (common.run(["brew", "list", "--cask", "-1"]) or "").splitlines() if ln.strip()}
     store = common.load_presets()["presets"]

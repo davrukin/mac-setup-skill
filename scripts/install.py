@@ -116,6 +116,7 @@ def keep_sudo_alive(stop: threading.Event) -> None:
 
 
 def run(preset: dict, name: str, skip_update: bool = False, skip_mas: bool = False) -> int:
+    common.require_brew("installing")
     steps = build_steps(preset, skip_mas)
     if not steps:
         print("Nothing to install.")

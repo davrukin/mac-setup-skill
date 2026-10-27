@@ -74,6 +74,7 @@ def main() -> None:
     ap.add_argument("--skip-update", action="store_true", help="with --install: do not run `brew update` first")
     ap.add_argument("--skip-mas", action="store_true", help="with --install: leave out App Store apps")
     args = ap.parse_args()
+    common.require_brew("checking what is installed")
 
     store = common.load_presets()["presets"]
     if not store:
