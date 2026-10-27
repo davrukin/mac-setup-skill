@@ -55,16 +55,21 @@ def cask_targets(casks: list[str]) -> dict[str, list[tuple[str, str, str]]]:
     except ValueError:
         return result
     rules = folder_rules()
+    roots = {Path(r) for r in audit.app_dirs()}
     for cask in data.get("casks", []):
         token = cask["token"]
         for art in cask.get("artifacts", []):
             if not (isinstance(art, dict) and art.get("app")):
                 continue
             name = str(art["app"][0])
-            if str(art.get("target", "")).startswith("/"):
-                result.setdefault(token, []).append((name, str(art["target"]), "metadata"))
-            elif token in rules:
-                result.setdefault(token, []).append((name, f"{rules[token]}/{name}", "rule"))
+            reported = str(art["target"]) if str(art.get("target", "")).startswith("/") else ""
+            if token in rules:
+                # Homebrew reports a target for every cask (an old definition says /Applications/X.app), so the
+                # rule decides where the app belongs; it counts as "metadata" only when the definition agrees.
+                wanted = f"{rules[token]}/{name}"
+                result.setdefault(token, []).append((name, wanted, "metadata" if Path(reported) == Path(wanted) else "rule"))
+            elif reported and Path(reported).parent not in roots:
+                result.setdefault(token, []).append((name, reported, "metadata"))  # the cask itself names a subfolder
     return result
 
 
@@ -73,23 +78,28 @@ def is_running(app: Path) -> bool:
     return probe.returncode == 0
 
 
-def plan_casks(candidates: list[str], managed: set[str]) -> list[dict]:
+def plan_casks(candidates: list[str], managed: set[str]) -> tuple[list[dict], dict[str, list[str]]]:
+    """(moves to make, every folder-bound cask by state: in_place / to_move / not_found)."""
     steps = []
-    for token, entries in cask_targets(candidates).items():
+    status: dict[str, list[str]] = {"in_place": [], "to_move": [], "not_found": []}
+    for token, entries in sorted(cask_targets(candidates).items()):
         for bundle_name, target, source in entries:
             if Path(target).exists():
+                status["in_place"].append(token)
                 continue
             # Only a subfolder of an app folder counts (ArtCraft inside /Applications); a plain
             # /Applications target such as Meta.app is where the user chose to keep it.
             home = Path(target).parent.parent
             loose = next((root / bundle_name for root in audit.app_dirs() if root == home and (root / bundle_name).exists()), None)
             if not loose:
+                status["not_found"].append(token)
                 continue
             # "relink": Homebrew installed it, so move the app and replace its record. "adopt": Homebrew did not.
             # Both need a definition that names the folder; without one, Homebrew would look for the app in /Applications.
             kind = "stale" if source == "rule" else ("relink" if token in managed else "adopt")
+            status["to_move"].append(token)
             steps.append({"cask": token, "kind": kind, "from": str(loose), "to": target})
-    return steps
+    return steps, status
 
 
 def plan_setapp(managed: set[str]) -> dict:
@@ -131,11 +141,19 @@ def main() -> None:
         subprocess.run(["brew", "update"], capture_output=True)
     candidates = sorted(managed | set(folder_rules()) | {c for p in store.values() for c in p.get("casks", [])})
     print("🔍 Looking for apps in the wrong folder...", flush=True)
-    steps = plan_casks(candidates, managed)
+    steps, status = plan_casks(candidates, managed)
     setapp = plan_setapp(managed)
     outside, extra, brew_copies = setapp["only_outside"], setapp["extra_copy"], setapp["brew_copies"]
 
-    print(f"\n📁 Apps that belong in a folder but sit elsewhere: {len(steps)}")
+    found = sum(len(v) for v in status.values())
+    print(f"\n📁 Apps with a home folder: {found} checked")
+    if status["in_place"]:
+        print(f"  ✅ already in their folder ({len(status['in_place'])}): {', '.join(status['in_place'])}")
+    if status["not_found"]:
+        print(f"  ➖ not installed here, nothing to move ({len(status['not_found'])}): {', '.join(status['not_found'])}")
+    if not found:
+        print("  Homebrew reported no cask with a home folder. Run `brew update`, or check references/folders.yaml.")
+    print(f"  ➡️  to move: {len(steps)}")
     for s in steps:
         how = {"relink": "move, drop the old Homebrew record, brew install --cask --adopt",
                "adopt": "move, then brew install --cask --adopt",
