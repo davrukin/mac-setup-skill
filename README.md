@@ -35,6 +35,7 @@ Needs macOS, `python3` (installed with the Xcode command line tools), and Homebr
 | `setup.sh verify [--apply] [--set CAT KEY...]` | Check presets for conflicts, deprecated packages and duplicates; place libraries with their dependents |
 | `setup.sh manual` | Write `data/manual-installs.md`: where to get apps Homebrew cannot install |
 | `setup.sh presets list\|show\|import\|export\|delete` | Manage presets, including importing someone else's Brewfile |
+| `setup.sh presets exclude PRESET item...` (also `include`, `excludes`) | Keep an item off one preset, e.g. a common app off `developer`; saved in `data/preset_excludes.yaml` |
 | `setup.sh bootstrap` | Install Homebrew (with confirmation) and the Python environment |
 
 ## How the pieces decide things

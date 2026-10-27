@@ -98,6 +98,10 @@ def main() -> None:
         if marked:
             print(f"🚫 Leaving out everything in the '{common.EXCLUDE_PRESET}' preset ({len(marked)} names).")
         excludes |= marked
+    own = set(common.load_preset_excludes().get(name, []))
+    if own:
+        print(f"🚫 Leaving out {len(own)} item(s) you excluded for '{name}': {', '.join(sorted(own, key=str.lower))}")
+        excludes |= own
     if excludes:
         preset, removed = apply_excludes(preset, excludes)
         print(f"➖ Excluded {len(removed)} item(s) from this preset: {', '.join(removed) or 'none matched'}")
