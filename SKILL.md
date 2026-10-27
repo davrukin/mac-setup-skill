@@ -71,7 +71,7 @@ scripts/setup.sh deploy --preset developer --exclude slack,discord --include-rec
 
 It writes `data/brewfiles/<preset>.Brewfile`, prints `brew bundle install --file=...`, and runs it only with `--run` or a "y" at the prompt.
 
-Before installing, **ask the user what should be left out**. Common cases on a work Mac: personal chat, VPN and password-manager apps, anything the employer already deploys through MDM, and tools that conflict with company policy. Pass those with `--exclude`. Show the dry-run output and get a go-ahead before `--run`, because this installs software on a machine the user may not fully own.
+Before installing, **ask the user what should be left out**. Common cases on a work Mac: personal chat, VPN and password-manager apps, anything the employer already deploys through MDM, and tools that conflict with company policy. Pass those with `--exclude`. Apps that live in a Setapp folder are Setapp's: `deploy` skips their casks and `data/manual-installs.md` says to add them from Setapp. `--run` installs item by item with progress, a log in `data/logs/` and a failure list (see `docs/TROUBLESHOOTING.md`). Show the dry-run output and get a go-ahead before `--run`, because this installs software on a machine the user may not fully own.
 
 Notes to pass on: Mac App Store entries need the user signed in to the App Store first; an app already present in `/Applications` can make a cask install fail until it is removed or adopted; re-running the same command skips finished items.
 
