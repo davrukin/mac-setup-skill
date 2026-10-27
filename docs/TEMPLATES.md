@@ -23,13 +23,13 @@ cp data/game_choices.json ~/my-mac-setup/
 scripts/setup.sh game --data-dir ~/my-mac-setup
 ```
 
-The game scans your Mac and starts with each item already assigned where it appears in the template. Items the template has not seen are asked about as normal. Items in the template that you do not have are ignored. To review every card, add `--redo`; the template choice is then shown as the suggestion for you to confirm or change.
+The game scans your Mac and skips every item the template already decided (it prints "Resuming: N items already sorted"). Only items the template has not seen are asked about, and each card still shows a suggested category. Template items that you do not have are ignored. `--redo` ignores the saved choices and asks about everything, so do not use it if you want the template's answers.
 
 Use `--data-dir` and keep the same folder for `deploy`, `verify` and `presets`. Do not use `--new-run` for this: it starts clean and reuses nothing.
 
 ## Option 2: change the categories first
 
-The template's categories are `developer`, `common`, `photography`, `gaming` and `not_needed`. Edit `categories` in your copy of `game_choices.json`, or add one in the game. Items sorted into a category you delete are asked about again.
+The template's categories are `developer`, `common`, `photography`, `gaming` and `not_needed`. Edit `categories` in your copy of `game_choices.json`, or press `n` in the game to add a category and hotkey. Rename or remove categories before you play, then check the result with `setup.sh presets show NAME`.
 
 ```json
 "categories": { "developer": "d", "common": "c", "music": "m", "not_needed": "x" }

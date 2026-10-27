@@ -54,8 +54,8 @@ Built from those choices in `data/presets.yaml`. Each preset includes `common`, 
 
 ## How to change it
 
-- Re-sort everything: `scripts/setup.sh game --redo`. Items already decided are skipped without `--redo`.
-- Add a category and hotkey: press the add-category key in the game, or pass `--categories developer,common,music:m`.
+- Re-sort everything: `scripts/setup.sh game --redo`. Without `--redo`, items already decided are skipped. With it, saved choices are ignored.
+- Add a category and hotkey: press `n` in the game, or pass `--categories developer,common,music:m`.
 - Edit by hand: `scripts/setup.sh verify --set CATEGORY KEY...` where a key looks like `casks:figma` or `brews:git`.
 - Keep an item off one preset: `scripts/setup.sh presets exclude developer WhatsApp`.
 
