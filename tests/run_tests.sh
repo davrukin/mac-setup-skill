@@ -252,8 +252,12 @@ folders:
     casks: [cadcraft]
 YAML
 FAKE_BREW_NO_TARGET=1 MAC_SETUP_FOLDERS_FILE="$TMP/folders.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps2" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply > "$TMP/rel3.out"
-check "relocate falls back to folders.yaml when the cask names no folder" bash -c "[ -d '$TMP/Apps2/ArtCraft/CADCraft.app' ] && grep -q 'install --cask --adopt cadcraft' '$TMP/rel3.out'"
+check "stale definitions are reported, not guessed at, and the app stays put" bash -c "[ -d '$TMP/Apps2/CADCraft.app' ] && [ ! -d '$TMP/Apps2/ArtCraft' ] && grep -q 'cannot be linked yet' '$TMP/rel3.out'"
 check "relocate runs brew update first unless told not to" grep -q "Updating Homebrew" "$TMP/rel3.out"
+# Installed by Homebrew: move, drop the old record, adopt at the new path.
+mkdir -p "$TMP/Apps3/CADCraft.app/Contents"
+FAKE_BREW_INSTALLED=cadcraft MAC_SETUP_APP_DIRS="$TMP/Apps3" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply --skip-update > "$TMP/rel4.out"
+check "a Homebrew-installed app is moved, its old record dropped and re-adopted" bash -c "[ -d '$TMP/Apps3/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps3/CADCraft.app' ] && grep -q 'uninstall --cask cadcraft' '$TMP/rel4.out' && grep -q 'install --cask --adopt cadcraft' '$TMP/rel4.out'"
 
 echo "== no Homebrew on PATH =="
 PY3="$(command -v python3)"
