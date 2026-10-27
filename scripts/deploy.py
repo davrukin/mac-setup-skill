@@ -107,6 +107,11 @@ def main() -> None:
     if own:
         print(f"🚫 Leaving out {len(own)} item(s) you excluded for '{name}': {', '.join(sorted(own, key=str.lower))}")
         excludes |= own
+    setapp = common.setapp_casks() & set(preset.get("casks") or [])
+    if setapp:
+        print(f"🧩 {len(setapp)} app(s) belong to Setapp, so Homebrew will not install them: {', '.join(sorted(setapp))}.\n"
+              "   Install Setapp, sign in, and add them from inside it so your subscription covers them (see data/manual-installs.md).")
+        excludes |= setapp
     if excludes:
         preset, removed = apply_excludes(preset, excludes)
         print(f"➖ Excluded {len(removed)} item(s) from this preset: {', '.join(removed) or 'none matched'}")

@@ -44,6 +44,14 @@ def empty_preset(description: str = "", source: str = "") -> dict:
     }
 
 
+def setapp_casks() -> set[str]:
+    """Casks whose apps live in a Setapp folder on the audited Mac; install those from Setapp, not Homebrew."""
+    try:
+        return {str(c) for c in json.loads(INVENTORY_FILE.read_text(encoding="utf-8")).get("setapp_casks", [])}
+    except (OSError, ValueError):
+        return set()
+
+
 def normalize_preset(preset: dict) -> dict:
     """Fill missing keys, dedupe and sort so diffs in Git stay small."""
     out = empty_preset(preset.get("description", ""), preset.get("source", ""))

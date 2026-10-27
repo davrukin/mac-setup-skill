@@ -79,6 +79,11 @@ def iter_apps(root: Path):
                     yield sub
 
 
+def is_setapp(app: Path) -> bool:
+    """True for apps in a Setapp folder (/Applications/Setapp, ~/Applications/Setapp)."""
+    return app.parent.name == "Setapp"
+
+
 def bundle_id(app: Path) -> str:
     try:
         with open(app / "Contents" / "Info.plist", "rb") as f:
@@ -141,6 +146,8 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
     rules = rules or {}
     unusable = index["unusable"] if index else set()
     adopted, unmatched, mas_apps, apple = [], [], [], 0
+    setapp_apps: list[str] = []
+    setapp_casks: list[str] = []
     consolidated: dict[str, list[str]] = {}
     seen = set()
     for root in app_dirs():
@@ -157,6 +164,13 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
                 mas_apps.append(name)  # covered by the `mas` list
                 continue
             tokens = resolve_casks(name, bundle, index, known_casks)
+            if is_setapp(app):
+                # Setapp licenses these through its own app; installing the Homebrew cask would leave Setapp unaware of them.
+                setapp_apps.append(name)
+                usable = [t for t in tokens if t not in unusable]
+                if usable:
+                    setapp_casks.append(usable[0])
+                continue
             target = consolidation_target(tokens[0] if tokens else "", bundle, rules)
             if target:
                 consolidated.setdefault(target, []).append(name)
@@ -180,6 +194,8 @@ def scan_apps(managed_casks: set[str], known_casks: set[str] | None,
         "unmatched_apps": sorted(set(unmatched), key=str.lower),
         "mas_apps_seen": sorted(set(mas_apps), key=str.lower),
         "apple_apps_skipped": apple,
+        "setapp_apps": sorted(set(setapp_apps), key=str.lower),
+        "setapp_casks": sorted(set(setapp_casks)),
         "consolidated": {t: sorted(set(v), key=str.lower) for t, v in consolidated.items()},
     }
 
