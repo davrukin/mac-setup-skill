@@ -19,6 +19,7 @@ JSON
     esac
     case "$*" in *cadcraft*)
       tgt=", \"target\": \"${MAC_SETUP_APP_DIRS%%:*}/ArtCraft/CADCraft.app\""; [ -n "${FAKE_BREW_NO_TARGET:-}" ] && tgt=""
+      [ -n "${FAKE_BREW_ROOT_TARGET:-}" ] && tgt=", \"target\": \"${MAC_SETUP_APP_DIRS%%:*}/CADCraft.app\""
       cat <<JSON
 {"formulae": [], "casks": [{"token": "cadcraft", "deprecated": false, "disabled": false, "artifacts": [{"app": ["CADCraft.app"]${tgt}}]}]}
 JSON
