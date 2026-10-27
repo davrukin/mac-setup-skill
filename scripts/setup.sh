@@ -68,6 +68,11 @@ ensure_python() {
   command -v python3 >/dev/null 2>&1 || die "python3 not found. On a fresh Mac run: xcode-select --install"
   if [ ! -d "$VENV" ]; then info "🐍 Creating virtual environment at $VENV"; python3 -m venv "$VENV"; fi
   PY="$VENV/bin/python"
+  # Keep pip current: right after the venv is created, then at most once a week (a failed upgrade, e.g. offline, is not fatal).
+  local stamp="$VENV/.pip-upgraded"
+  if [ ! -f "$stamp" ] || [ -n "$(find "$stamp" -mtime +7 2>/dev/null)" ]; then
+    if "$PY" -m pip install --quiet --upgrade pip; then touch "$stamp"; else warn "Could not upgrade pip; continuing with the current version."; fi
+  fi
   "$PY" -m pip install --quiet pyyaml || die "Could not install pyyaml."
   if [ "$WITH_AI" = 1 ] || [ -n "${LLM_MODEL:-}" ]; then
     "$PY" -m pip install --quiet litellm || warn "Could not install litellm; AI features will be skipped."
