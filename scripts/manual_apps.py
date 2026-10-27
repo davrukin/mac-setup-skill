@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Write a document listing the apps Homebrew cannot install, with where to get each one.
 
 Input is data/manual_apps.json, written by the assistant (the skill's LLM) from the

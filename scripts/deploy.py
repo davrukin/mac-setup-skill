@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Turn a preset into a Brewfile and the command that installs it.
 
 Interactive when run in a terminal with no flags. For assistants and scripts, pass

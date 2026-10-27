@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 """Shared helpers for the mac-setup scripts. Standard library + PyYAML only."""
 from __future__ import annotations
 

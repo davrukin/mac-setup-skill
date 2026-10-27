@@ -66,6 +66,7 @@ ChatGPT's skill packaging has changed more than once. If an upload is rejected, 
 
 Checking this repo out gives you the configuration worked out here, not a blank slate:
 
+- `docs/CONFIGURATION.md` and `docs/TEMPLATES.md`: what is configured today, and how to use these categories as a starting template for your own.
 - `references/categories.yaml`: grouping rules, the shared `common` set, and consolidation (JetBrains IDEs and Android Studio become `jetbrains-toolbox`).
 - `references/overlaps.yaml`: tools that overlap (youtube-dl/yt-dlp and others), which `verify` reports.
 - `data/game_choices.json`: the sorting choices and category hotkeys (developer `d`, common `c`, photography `f`, gaming `g`, not_needed `x`). `setup.sh game` resumes from them, so only items it has not seen are asked about; `--redo` starts fresh.
@@ -83,6 +84,7 @@ Use `setup.sh --new-run ...` to start clean in `data/runs/<date_time>` without t
 ```
 SKILL.md              instructions for the assistant
 scripts/              setup.sh + audit.py, game.py, verify.py, manual_apps.py, categorize.py, recommend.py, deploy.py, presets.py, common.py, ai_skill.py
+docs/                 CONFIGURATION.md, TEMPLATES.md
 references/           categories.yaml, overlaps.yaml, recommended_seed.yaml, schemas.md, web-research.md
 agents/openai.yaml    ChatGPT skill UI metadata
 data/                 tuned presets, game choices, inventory, manual installs (runs/ is git-ignored)
@@ -99,4 +101,4 @@ Runs the audit, import, recommend and deploy flows against a fake `brew` and fak
 
 ## License
 
-Add one before publishing (MIT is a common choice for a tool like this).
+[GNU AGPL-3.0-or-later](LICENSE), Copyright (C) 2026 Daniel Avrukin. You can use, change and share this freely. If you distribute a modified version, or run one as a network service, you must offer its source under the same license. That also covers your own presets and category choices if you build them from the files in `data/`.

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
 # Stand-in for Homebrew used by tests/run_tests.sh. Never touches the real system.
 case "${1:-}" in
   update)   [ -n "${FAKE_BREW_STATE:-}" ] && rm -f "$FAKE_BREW_STATE/needs_update"; echo "fake brew: updated"; exit 0 ;;
