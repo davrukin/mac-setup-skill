@@ -326,119 +326,772 @@ presets:
     - name: Zookeeper World
       id: 1370858242
     vscode: []
-  common:
-    description: Tools every Mac gets, whatever its role
-    source: audit:heuristic
-    taps: []
-    brews: []
-    casks:
-    - claude
-    - claude-code
-    - figma
-    mas: []
-    vscode: []
   developer:
-    description: Software engineering tools (editors, terminals, CLIs, containers,
-      Android/iOS tooling)
-    source: audit:heuristic
-    taps: []
+    description: Software engineering tools, picked in the sorting game
+    source: audit:game
+    taps:
+    - teamookla/speedtest
     brews:
+    - ata
     - cocoapods
+    - cpdf
+    - djvulibre
+    - f3
+    - ffmpeg
+    - ffmpeg-full
     - gh
     - git
+    - git-filter-repo
     - git-lfs
+    - glib
     - go
-    - llvm@17
+    - gobject-introspection
+    - golangci-lint
+    - harfbuzz
+    - leptonica
     - mas
+    - mpv
+    - mupdf
     - node
+    - ollama
+    - pandoc
+    - pango
     - pipx
+    - poppler
     - pyenv
+    - python-tk@3.13
     - python@3.12
+    - rename
+    - smartmontools
+    - swift-format
+    - teamookla/speedtest/speedtest
+    - telnet
     - tmux
     - tree
+    - typst
     - uv
+    - virtualenv
+    - yt-dlp
     casks:
+    - ankerwork
+    - antigravity
+    - antigravity-cli
+    - antigravity-ide
+    - artcraft
+    - audacity
+    - balenaetcher
+    - bartender
+    - betterdisplay
+    - bettertouchtool
+    - boom-3d
+    - burn
+    - cadcraft
+    - caffeine
+    - caldigit-docking-utility
+    - calibre
+    - chatgpt
     - claude
     - claude-code
+    - cleanmymac
+    - clipgrab
+    - coconutbattery
     - cursor
+    - db-browser-for-sqlite
+    - ddpm
+    - deckcraft
+    - designcraft
+    - devutils
+    - disk-drill
+    - effectcraft
     - figma
+    - filmcraft
+    - firefox
     - flutter
+    - focusrite-control-2
+    - gemini
     - github
+    - gnucash
+    - godspeed
+    - google-chrome
+    - google-drive
+    - gridcraft
     - jetbrains-toolbox
+    - libreoffice
+    - lightcraft
+    - lm-studio
+    - macs-fan-control
+    - macwhisper
+    - marked-app
+    - mediainfo
+    - meta
+    - microsoft-office
+    - mimestream
+    - modern-csv
+    - netspot
+    - notion
+    - notion-calendar
+    - obsidian
+    - onyx
+    - pacifist
+    - pdf-expert
+    - pdfcraft
+    - photocraft
+    - plaud
+    - prizmo
     - proxyman
+    - remember-the-milk
+    - setapp
+    - sketch
+    - slack
+    - soulver
+    - soundcraft
     - sourcetree
+    - spotify
+    - stillcolor
+    - superwhisper
+    - swift-publisher
+    - taphouse
+    - textmate
+    - tidal
+    - transmission
+    - typora
+    - vectorcraft
     - visual-studio-code
+    - vlc
+    - vsee
     - warp
+    - wifi-explorer
+    - winzip
+    - wordcraft
     - zed
+    - zeplin
+    - zoom
     mas:
+    - name: Agenda
+      id: 1287445660
+    - name: Algorithms & Data Structures
+      id: 1498349698
+    - name: Blackmagic Disk Speed Test
+      id: 425264550
+    - name: Brother iPrint&Scan
+      id: 1193539993
+    - name: Capital One Shopping
+      id: 1477110326
+    - name: Cashculator
+      id: 1591642644
+    - name: Chronicle
+      id: 572561420
+    - name: Deliveries
+      id: 290986013
+    - name: DevCleaner
+      id: 1388020431
+    - name: Developer
+      id: 640199958
+    - name: Fabula
+      id: 1591155142
+    - name: Flighty
+      id: 1358823008
+    - name: GoPro Player
+      id: 1460836908
+    - name: GoPro Quik
+      id: 561350520
+    - name: Grazie
+      id: 6450955215
+    - name: Ground News
+      id: 1324203419
+    - name: iBooks Author
+      id: 490152466
+    - name: inRoute
+      id: 1476902521
+    - name: Judo
+      id: 1564578427
+    - name: Keynote
+      id: 409183694
+    - name: Kindle
+      id: 302584613
+    - name: LiquidText
+      id: 922765270
+    - name: Mela
+      id: 1568924476
+    - name: monday.com
+      id: 1298450641
+    - name: Numbers
+      id: 409203825
+    - name: OpenBudget
+      id: 1526973735
+    - name: Pages
+      id: 409201541
+    - name: Parcel Classic
+      id: 639968404
+    - name: PDFgear
+      id: 6469021132
+    - name: Perplexity
+      id: 6714467650
+    - name: Planny
+      id: 6692634891
+    - name: Poolsuite FM
+      id: 1514817810
+    - name: Prime Video
+      id: 545519333
+    - name: Rosetta Stone Learn Languages
+      id: 1476088902
+    - name: SnippetsLab
+      id: 1006087419
+    - name: Swift Playground
+      id: 1496833156
+    - name: System Designer
+      id: 1102494854
+    - name: The Unarchiver
+      id: 425424353
+    - name: TickTick
+      id: 966085870
+    - name: Todoist
+      id: 585829637
+    - name: Under My Roof
+      id: 1524335878
+    - name: Universe
+      id: 1211437633
+    - name: Vulcan
+      id: 1533712040
+    - name: WhatsApp
+      id: 310633997
     - name: Xcode
       id: 497799835
     vscode: []
-  creative:
-    description: Photo, video, design and audio tools
-    source: audit:heuristic
-    taps: []
+  common:
+    description: Tools every Mac gets, whatever its role
+    source: audit:game
+    taps:
+    - teamookla/speedtest
     brews:
+    - cpdf
+    - djvulibre
+    - ffmpeg
+    - ffmpeg-full
+    - glib
+    - harfbuzz
+    - leptonica
+    - mpv
+    - mupdf
+    - poppler
+    - teamookla/speedtest/speedtest
+    - yt-dlp
+    casks:
+    - ankerwork
+    - artcraft
+    - audacity
+    - balenaetcher
+    - bartender
+    - betterdisplay
+    - bettertouchtool
+    - boom-3d
+    - burn
+    - cadcraft
+    - caffeine
+    - caldigit-docking-utility
+    - calibre
+    - chatgpt
+    - claude
+    - cleanmymac
+    - clipgrab
+    - coconutbattery
+    - deckcraft
+    - designcraft
+    - disk-drill
+    - effectcraft
+    - filmcraft
+    - firefox
+    - focusrite-control-2
+    - gemini
+    - gnucash
+    - godspeed
+    - google-chrome
+    - google-drive
+    - gridcraft
+    - libreoffice
+    - lightcraft
+    - macs-fan-control
+    - macwhisper
+    - marked-app
+    - mediainfo
+    - meta
+    - microsoft-office
+    - mimestream
+    - modern-csv
+    - notion
+    - notion-calendar
+    - obsidian
+    - pdf-expert
+    - pdfcraft
+    - photocraft
+    - plaud
+    - prizmo
+    - remember-the-milk
+    - setapp
+    - soundcraft
+    - spotify
+    - stillcolor
+    - swift-publisher
+    - textmate
+    - tidal
+    - transmission
+    - vectorcraft
+    - vlc
+    - vsee
+    - winzip
+    - wordcraft
+    - zoom
+    mas:
+    - name: Agenda
+      id: 1287445660
+    - name: Brother iPrint&Scan
+      id: 1193539993
+    - name: Capital One Shopping
+      id: 1477110326
+    - name: Cashculator
+      id: 1591642644
+    - name: Chronicle
+      id: 572561420
+    - name: Deliveries
+      id: 290986013
+    - name: DevCleaner
+      id: 1388020431
+    - name: Flighty
+      id: 1358823008
+    - name: GoPro Player
+      id: 1460836908
+    - name: GoPro Quik
+      id: 561350520
+    - name: Ground News
+      id: 1324203419
+    - name: iBooks Author
+      id: 490152466
+    - name: inRoute
+      id: 1476902521
+    - name: Keynote
+      id: 409183694
+    - name: Kindle
+      id: 302584613
+    - name: Mela
+      id: 1568924476
+    - name: Numbers
+      id: 409203825
+    - name: OpenBudget
+      id: 1526973735
+    - name: Pages
+      id: 409201541
+    - name: Parcel Classic
+      id: 639968404
+    - name: PDFgear
+      id: 6469021132
+    - name: Planny
+      id: 6692634891
+    - name: Poolsuite FM
+      id: 1514817810
+    - name: Prime Video
+      id: 545519333
+    - name: Rosetta Stone Learn Languages
+      id: 1476088902
+    - name: The Unarchiver
+      id: 425424353
+    - name: TickTick
+      id: 966085870
+    - name: Todoist
+      id: 585829637
+    - name: Under My Roof
+      id: 1524335878
+    - name: WhatsApp
+      id: 310633997
+    vscode: []
+  photography:
+    description: photography tools, picked in the sorting game
+    source: audit:game
+    taps:
+    - teamookla/speedtest
+    brews:
+    - cpdf
+    - djvulibre
     - exiftool
     - ffmpeg
+    - ffmpeg-full
+    - glib
+    - harfbuzz
     - imagemagick
+    - leptonica
+    - mpv
+    - mupdf
+    - photocraft-cli
+    - poppler
+    - teamookla/speedtest/speedtest
     - yt-dlp
     casks:
     - affinity
+    - ankerwork
+    - artcraft
     - audacity
+    - balenaetcher
+    - bartender
+    - betterdisplay
+    - bettertouchtool
+    - boom-3d
+    - burn
+    - cadcraft
+    - caffeine
+    - caldigit-docking-utility
+    - calibre
+    - chatgpt
     - claude
-    - claude-code
-    - figma
+    - cleanmymac
+    - clipgrab
+    - coconutbattery
+    - deckcraft
+    - designcraft
+    - disk-drill
+    - effectcraft
+    - filmcraft
+    - firefox
+    - focusrite-control-2
+    - fujifilm-x-raw-studio
+    - gemini
     - gimp
+    - gnucash
+    - godspeed
+    - google-chrome
+    - google-drive
+    - gridcraft
     - handbrake-app
+    - libreoffice
+    - lightcraft
+    - macs-fan-control
+    - macwhisper
+    - marked-app
+    - mediainfo
+    - meta
+    - metaimage
+    - microsoft-office
+    - mimestream
+    - modern-csv
+    - notion
+    - notion-calendar
+    - obsidian
+    - pdf-expert
+    - pdfcraft
+    - photocraft
+    - photosrevive
+    - plaud
+    - prizmo
     - rawtherapee
-    - sketch
+    - remember-the-milk
+    - setapp
+    - shutter-encoder
+    - soundcraft
+    - spotify
+    - stillcolor
+    - swift-publisher
+    - textmate
+    - tidal
+    - transmission
+    - upscayl
+    - vectorcraft
+    - vlc
+    - vsee
+    - winzip
+    - wordcraft
     - xnviewmp
+    - zoom
     mas:
+    - name: Agenda
+      id: 1287445660
+    - name: Brother iPrint&Scan
+      id: 1193539993
+    - name: Capital One Shopping
+      id: 1477110326
+    - name: Cashculator
+      id: 1591642644
+    - name: Chronicle
+      id: 572561420
     - name: Compressor
       id: 424390742
+    - name: DaVinci Resolve
+      id: 571213070
+    - name: Deliveries
+      id: 290986013
+    - name: DevCleaner
+      id: 1388020431
     - name: Final Cut Pro
       id: 1631624924
-    - name: Logic Pro
-      id: 634148309
+    - name: Flighty
+      id: 1358823008
+    - name: GoPro Player
+      id: 1460836908
+    - name: GoPro Quik
+      id: 561350520
+    - name: Ground News
+      id: 1324203419
+    - name: iBooks Author
+      id: 490152466
+    - name: inRoute
+      id: 1476902521
+    - name: Keynote
+      id: 409183694
+    - name: Kindle
+      id: 302584613
+    - name: Mela
+      id: 1568924476
+    - name: Nitro
+      id: 1591292532
+    - name: Numbers
+      id: 409203825
+    - name: OpenBudget
+      id: 1526973735
+    - name: Pages
+      id: 409201541
+    - name: Parcel Classic
+      id: 639968404
+    - name: PDFgear
+      id: 6469021132
     - name: Photomator
       id: 1444636541
     - name: Pixelmator Pro
       id: 6746662575
+    - name: Planny
+      id: 6692634891
+    - name: Poolsuite FM
+      id: 1514817810
+    - name: Prime Video
+      id: 545519333
+    - name: Rosetta Stone Learn Languages
+      id: 1476088902
+    - name: The Unarchiver
+      id: 425424353
+    - name: TickTick
+      id: 966085870
+    - name: Todoist
+      id: 585829637
+    - name: Under My Roof
+      id: 1524335878
+    - name: WhatsApp
+      id: 310633997
     vscode: []
-  essentials:
-    description: Everyday productivity and system utilities
-    source: audit:heuristic
+  not_needed:
+    description: 'Exclusions: never installed by deploy, from any preset'
+    source: audit:game
     taps: []
     brews:
-    - mas
+    - gocr
+    - gtk+
+    - llvm@17
+    - youtube-dl
     casks:
-    - bartender
-    - betterdisplay
-    - claude
-    - claude-code
-    - figma
-    - firefox
-    - google-chrome
+    - altserver
+    - brave-browser@beta
+    - clickup
+    - crossover
+    - google-chrome@beta
     - microsoft-edge
-    - notion
-    - notion-calendar
-    - obsidian
-    - slack
-    - spotify
-    - vlc
-    - zoom
+    - microsoft-excel
+    - microsoft-onenote
+    - microsoft-outlook
+    - microsoft-powerpoint
+    - microsoft-word
+    - motion
+    - nordvpn
+    - onedrive
+    - openscad@snapshot
+    - opera
+    - parallels
+    - parallels-toolbox
+    - quicken
+    - sigmaos
+    - vivaldi
+    - zen
+    - zotero
     mas:
-    - name: Keynote
-      id: 409183694
+    - name: GarageBand
+      id: 682658836
+    - name: iMovie
+      id: 408981434
     - name: Keynote
       id: 361285480
-    - name: Numbers
-      id: 409203825
+    - name: Logic Pro
+      id: 634148309
+    - name: MainStage
+      id: 634159523
     - name: Numbers
       id: 361304891
     - name: Pages
-      id: 409201541
-    - name: Pages
       id: 361309726
+    - name: WhatsApp (old)
+      id: 1147396723
+    vscode: []
+  gaming:
+    description: gaming tools, picked in the sorting game
+    source: audit:game
+    taps:
+    - teamookla/speedtest
+    brews:
+    - cpdf
+    - djvulibre
+    - ffmpeg
+    - ffmpeg-full
+    - glib
+    - harfbuzz
+    - leptonica
+    - mpv
+    - mupdf
+    - poppler
+    - teamookla/speedtest/speedtest
+    - yt-dlp
+    casks:
+    - ankerwork
+    - artcraft
+    - audacity
+    - balenaetcher
+    - bartender
+    - betterdisplay
+    - bettertouchtool
+    - boom-3d
+    - burn
+    - cadcraft
+    - caffeine
+    - caldigit-docking-utility
+    - calibre
+    - chatgpt
+    - claude
+    - cleanmymac
+    - clipgrab
+    - coconutbattery
+    - deckcraft
+    - designcraft
+    - disk-drill
+    - effectcraft
+    - epic-games
+    - epilogue-playback
+    - filmcraft
+    - firefox
+    - focusrite-control-2
+    - gb-studio
+    - gemini
+    - gnucash
+    - godspeed
+    - gog-galaxy
+    - google-chrome
+    - google-drive
+    - gridcraft
+    - libreoffice
+    - lightcraft
+    - macs-fan-control
+    - macwhisper
+    - marked-app
+    - mediainfo
+    - meta
+    - microsoft-office
+    - mimestream
+    - modern-csv
+    - notion
+    - notion-calendar
+    - obsidian
+    - pdf-expert
+    - pdfcraft
+    - photocraft
+    - plaud
+    - prizmo
+    - remember-the-milk
+    - runescape
+    - setapp
+    - soundcraft
+    - spotify
+    - steam
+    - stillcolor
+    - swift-publisher
+    - textmate
+    - tidal
+    - transmission
+    - vectorcraft
+    - vlc
+    - vsee
+    - winzip
+    - wordcraft
+    - zoom
+    mas:
+    - name: Agenda
+      id: 1287445660
+    - name: Air Twister
+      id: 1555621822
+    - name: Brother iPrint&Scan
+      id: 1193539993
+    - name: Capital One Shopping
+      id: 1477110326
+    - name: Cashculator
+      id: 1591642644
+    - name: Chronicle
+      id: 572561420
+    - name: Cityscapes
+      id: 1631153096
+    - name: Deliveries
+      id: 290986013
+    - name: DevCleaner
+      id: 1388020431
+    - name: Farm It!
+      id: 1538476446
+    - name: Flighty
+      id: 1358823008
+    - name: GoPro Player
+      id: 1460836908
+    - name: GoPro Quik
+      id: 561350520
+    - name: Ground News
+      id: 1324203419
+    - name: Hitchhiker - A Mystery Game
+      id: 1455534343
+    - name: iBooks Author
+      id: 490152466
+    - name: inRoute
+      id: 1476902521
+    - name: Keynote
+      id: 409183694
+    - name: Kindle
+      id: 302584613
+    - name: Mela
+      id: 1568924476
+    - name: Mini Motorways
+      id: 1456188526
+    - name: Numbers
+      id: 409203825
+    - name: OpenBudget
+      id: 1526973735
+    - name: Outlanders
+      id: 1468558187
+    - name: Pages
+      id: 409201541
+    - name: Parcel Classic
+      id: 639968404
+    - name: PDFgear
+      id: 6469021132
+    - name: Planny
+      id: 6692634891
+    - name: Poolsuite FM
+      id: 1514817810
+    - name: Prime Video
+      id: 545519333
+    - name: reignsbeyond
+      id: 1516293234
+    - name: Rosetta Stone Learn Languages
+      id: 1476088902
+    - name: Samorost 3+
+      id: 1611529849
+    - name: The Unarchiver
+      id: 425424353
+    - name: TheOregonTrail
+      id: 1502228492
+    - name: TickTick
+      id: 966085870
+    - name: Todoist
+      id: 585829637
+    - name: Under My Roof
+      id: 1524335878
+    - name: WhatsApp
+      id: 310633997
+    - name: Zookeeper World
+      id: 1370858242
     vscode: []
