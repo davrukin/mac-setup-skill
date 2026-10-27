@@ -238,6 +238,9 @@ def summary(findings: list[dict]) -> str:
 
 
 def verify_presets(presets: dict, names: list[str] | None = None) -> list[dict]:
+    if not common.have("brew"):
+        print("⚠️  Homebrew was not found, so conflicts and deprecated packages could not be checked.")
+        return []
     chosen = {n: p for n, p in presets.items() if not names or n in names or n == common.EXCLUDE_PRESET}
     casks = {c for p in chosen.values() for c in common.normalize_preset(p)["casks"]}
     brews = {b for p in chosen.values() for b in common.normalize_preset(p)["brews"]}
@@ -252,6 +255,7 @@ def main() -> None:
     ap.add_argument("--set", nargs="+", action="append", metavar=("CATEGORY", "KEY"),
                     help="move items to CATEGORY (e.g. --set not_needed casks:vivaldi opera), then rebuild")
     args = ap.parse_args()
+    common.require_brew("checking packages against Homebrew")
 
     presets = common.load_presets()["presets"]
     if not presets:
