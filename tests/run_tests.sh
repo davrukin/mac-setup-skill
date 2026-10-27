@@ -39,6 +39,7 @@ app("Claude.app", "com.anthropic.claudefordesktop")    # `claude` cask; must not
 app("IntelliJ IDEA Community Edition.app", "com.jetbrains.intellij.ce")  # replaced by jetbrains-toolbox
 app("darktable.app", "org.darktable")                   # cask is disabled -> unmatched, never adopted
 app("zoom.us.app", "us.zoom.xos")                       # .pkg cask, matched via its uninstall stanza
+app("Microsoft Word.app", "com.microsoft.Word")             # belongs to the installed microsoft-office suite
 app("Safari.app", "com.apple.Safari")                  # Apple first-party -> skipped
 app("Xcode.app", "com.apple.dt.Xcode", mas=True)
 PY
@@ -62,6 +63,8 @@ import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert 'jetbrain
 check "shared common preset (claude, figma) is merged into every role preset" py "
 import yaml;P=yaml.safe_load(open('$PRESETS'))['presets']
 for n in ('developer','creative','common'): assert {'claude','figma'}<=set(P[n]['casks']),n"
+check "an app of an installed conflicting suite is not adopted as its own cask" py "
+import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert 'microsoft-office' in i['casks'] and 'microsoft-word' not in i['casks'],i['casks'];assert 'Microsoft Word' not in i['unmatched_apps']"
 check "Apple apps skipped, MAS app comes from mas list" py "
 import json;i=json.load(open('$MAC_SETUP_DATA/inventory.json'));assert i['apple_apps_skipped']>=1;assert {m['id'] for m in i['mas']}=={497799835,1289583905}"
 check "developer preset has editor, terminal, extension, tap" py "
@@ -83,7 +86,7 @@ import yaml;P=yaml.safe_load(open('$PRESETS'))['presets'];assert {'claude','figm
 check "hallucinated items dropped with a warning" grep -q "hallucinated-app" "$TMP/group.out"
 
 echo "== sorting game =="
-export MAC_SETUP_GAME_KEYS="enter,enter,enter,enter,enter,right,left,u,2,q"
+export MAC_SETUP_GAME_KEYS="enter,enter,enter,enter,enter,right,enter,left,u,2,q"
 python3 "$SCRIPTS/audit.py" --game > "$TMP/game.out"
 unset MAC_SETUP_GAME_KEYS
 check "game saves choices to game_choices.json" py "
@@ -192,7 +195,51 @@ check "Brewfile written to data/brewfiles" test -f "$MAC_SETUP_DATA/brewfiles/de
 check "brew bundle install invoked" grep -q "fake brew: bundle install" "$TMP/run.out"
 check "non-interactive run without --preset fails clearly" bash -c "! python3 '$SCRIPTS/deploy.py' < /dev/null 2>'$TMP/err.out' && grep -q -- '--preset' '$TMP/err.out'"
 
+echo "== verification =="
+check "conflicts, disabled, deprecated, duplicates and overlaps are found" py "
+import sys;sys.path.insert(0,'$SCRIPTS');import verify
+P={'p':{'casks':['a','b','gone'],'brews':['youtube-dl','yt-dlp','old'],'mas':[{'name':'Pages','id':1},{'name':'Pages','id':2}]}}
+cask={'a':{'token':'a','conflicts_with':{'cask':['b']}},'b':{'token':'b'},'gone':{'token':'gone','disabled':True,'disable_reason':'discontinued'}}
+form={'old':{'name':'old','deprecated':True,'deprecation_reason':'unsupported'}}
+f=verify.check_presets(P,cask,form)
+kinds={(x['kind'],tuple(x['items'])) for x in f}
+assert ('conflict',('a','b')) in kinds and ('disabled',('gone',)) in kinds and ('deprecated',('old',)) in kinds
+assert ('duplicate-app',('mas:1','mas:2')) in kinds and ('overlap',('youtube-dl','yt-dlp')) in kinds,kinds
+assert [x['severity'] for x in f][:2]==['error','error']
+fix=next(x for x in f if x['kind']=='overlap')['fix']; assert fix['keys']==['brews:youtube-dl']"
+check "items in not_needed are not reported" py "
+import sys;sys.path.insert(0,'$SCRIPTS');import verify
+P={'p':{'casks':['gone']},'not_needed':{'casks':['gone']}}
+assert verify.check_presets(P,{'gone':{'token':'gone','disabled':True}},{})==[]"
+check "libraries move next to the tools that need them" py "
+import sys;sys.path.insert(0,'$SCRIPTS');import verify
+inv={'brews':['glib','pango','poppler','lib2']}
+deps={'glib':{'brews:pango','brews:poppler'},'pango':{'brews:poppler'},'lib2':{'brews:pango'}}
+ch={'brews:glib':'developer','brews:pango':'developer','brews:poppler':'common','brews:lib2':'photography'}
+m={x['key']:x['to'] for x in verify.plan_library_moves(ch,inv,deps)}
+assert m=={'brews:glib':'common','brews:pango':'common','brews:lib2':'common'},m"
+check "library rule ignores excluded dependents and never moves out of common" py "
+import sys;sys.path.insert(0,'$SCRIPTS');import verify
+inv={'brews':['lib','lib3']};deps={'lib':{'brews:x'},'lib3':{'brews:y'}}
+assert verify.plan_library_moves({'brews:lib':'developer','brews:x':'not_needed'},inv,deps)==[]
+assert verify.plan_library_moves({'brews:lib3':'common','brews:y':'developer'},inv,deps)==[]"
+mkdir -p "$TMP/vfy" && cat > "$TMP/vfy/presets.yaml" <<'YAML'
+presets:
+  office:
+    casks: [microsoft-office, microsoft-word]
+YAML
+MAC_SETUP_DATA="$TMP/vfy" python3 "$SCRIPTS/deploy.py" --preset office --no-recs --dry-run > "$TMP/vfy.out"
+check "deploy reports conflicts it finds with Homebrew" grep -q "conflicts with" "$TMP/vfy.out"
+check "deploy refuses to install while conflicts remain" bash -c "! MAC_SETUP_DATA='$TMP/vfy' python3 '$SCRIPTS/deploy.py' --preset office --no-recs --run >/dev/null 2>&1"
+check "--ignore-problems overrides the refusal" bash -c "MAC_SETUP_DATA='$TMP/vfy' python3 '$SCRIPTS/deploy.py' --preset office --no-recs --run --ignore-problems >/dev/null 2>&1"
+
 echo "== not_needed is an exclusion =="
+check "common is not merged into the not_needed preset" py "
+import sys;sys.path.insert(0,'$SCRIPTS');import categorize,common
+inv={'casks':['claude','foo'],'brews':[],'mas':[],'vscode':[]}
+g={'not_needed':{'casks':['foo']},'developer':{'casks':[]}}
+categorize.apply_shared(g,inv)
+assert g['not_needed']['casks']==['foo'] and 'claude' in g['developer']['casks'] and 'claude' in g['common']['casks'],g"
 mkdir -p "$TMP/excl" && cat > "$TMP/excl/presets.yaml" <<'YAML'
 presets:
   work:

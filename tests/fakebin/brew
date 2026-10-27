@@ -3,7 +3,7 @@
 case "${1:-}" in
   update)   [ -n "${FAKE_BREW_STATE:-}" ] && rm -f "$FAKE_BREW_STATE/needs_update"; echo "fake brew: updated"; exit 0 ;;
   casks)    { [ -n "${FAKE_BREW_NO_CASKS:-}" ] || { [ -n "${FAKE_BREW_STATE:-}" ] && [ -e "$FAKE_BREW_STATE/needs_update" ]; }; } && { echo; exit 0; }
-            printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack claude claude-code jetbrains-toolbox intellij-idea-ce darktable zoom; exit 0 ;;
+            printf '%s\n' visual-studio-code iterm2 figma darktable raycast rectangle google-chrome 1password obsidian blender gimp orbstack claude claude-code jetbrains-toolbox intellij-idea-ce darktable zoom microsoft-office microsoft-word; exit 0 ;;
   info)
     case "$*" in *--formula*)
       cat <<'JSON'
@@ -18,6 +18,8 @@ JSON
     # `brew info --json=v2 --cask ...`: only the casks the audit tests care about.
     cat <<'JSON'
 {"formulae": [], "casks": [
+ {"token": "microsoft-office", "deprecated": false, "disabled": false, "conflicts_with": {"cask": ["microsoft-word"]}, "artifacts": [{"pkg": ["office.pkg"]}]},
+ {"token": "microsoft-word", "deprecated": false, "disabled": false, "conflicts_with": {"cask": ["microsoft-office"]}, "artifacts": [{"app": ["Microsoft Word.app"]}]},
  {"token": "iterm2", "desc": "Terminal emulator as alternative to Apple's Terminal app", "deprecated": false, "disabled": false, "artifacts": [{"app": ["iTerm.app"]}]},
  {"token": "claude", "deprecated": false, "disabled": false, "artifacts": [{"uninstall": [{"quit": ["com.anthropic.claudefordesktop"]}]}, {"app": ["Claude.app"]}]},
  {"token": "claude-code", "deprecated": false, "disabled": false, "artifacts": [{"binary": ["claude"]}]},
@@ -46,6 +48,7 @@ cask "visual-studio-code"
 cask "iterm2"
 cask "figma"
 cask "claude-code"
+cask "microsoft-office"
 mas "Xcode", id: 497799835
 mas "Pixelmator Pro", id: 1289583905
 vscode "ms-python.python"
