@@ -244,6 +244,17 @@ MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply 
 check "relocate --apply moves the app into its folder and adopts it" bash -c "[ -d '$TMP/Apps/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps/CADCraft.app' ] && grep -q 'install --cask --adopt cadcraft' '$TMP/rel2.out'"
 check "relocate never moves Setapp apps" bash -c "[ -d '$TMP/Apps/Ghost.app' ] && [ -d '$TMP/Apps/Soulver.app' ]"
 
+# Out-of-date Homebrew: the cask definition names no folder, so references/folders.yaml says where it belongs.
+mkdir -p "$TMP/Apps2/CADCraft.app/Contents"
+cat > "$TMP/folders.yaml" <<YAML
+folders:
+  - folder: $TMP/Apps2/ArtCraft
+    casks: [cadcraft]
+YAML
+FAKE_BREW_NO_TARGET=1 MAC_SETUP_FOLDERS_FILE="$TMP/folders.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps2" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply > "$TMP/rel3.out"
+check "relocate falls back to folders.yaml when the cask names no folder" bash -c "[ -d '$TMP/Apps2/ArtCraft/CADCraft.app' ] && grep -q 'install --cask --adopt cadcraft' '$TMP/rel3.out'"
+check "relocate runs brew update first unless told not to" grep -q "Updating Homebrew" "$TMP/rel3.out"
+
 echo "== no Homebrew on PATH =="
 PY3="$(command -v python3)"
 for entry in "missing:--preset dev" "relocate:" "verify:"; do

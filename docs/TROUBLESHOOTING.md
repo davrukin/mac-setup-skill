@@ -13,6 +13,8 @@ scripts/setup.sh relocate            # plan only; nothing changes
 scripts/setup.sh relocate --apply    # do it (quit the apps first)
 ```
 
+`relocate` runs `brew update` first, because the folder comes from the cask's current definition and an out-of-date Homebrew does not name it. If a definition still names no folder, `references/folders.yaml` says where the Craft casks belong. Apps Homebrew did not install are moved by that rule; for apps it did install, a reinstall would put them straight back, so they are skipped with a note until `brew update` brings the definition up to date. Add your own folder rules to that file.
+
 For a Craft app Homebrew installed, it runs `brew reinstall --cask --force NAME`: Homebrew removes the app from where it recorded it and installs it at the current path, so its records stay right. For one Homebrew did not install, it moves the app into the folder and runs `brew install --cask --adopt NAME`, so Homebrew takes it over without a new download (and puts the app back if that fails). Your settings and data are not touched; only `brew uninstall --zap` removes those. Do not drag the apps yourself: Homebrew then looks for them in the old place.
 
 ## Apps from Setapp
