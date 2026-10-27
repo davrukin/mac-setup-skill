@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
+# Stand-in for mas used by tests/run_tests.sh.
+case "${1:-}" in
+  list) exit 0 ;;
+  install) if [ "${2:-}" = "999" ]; then echo "Error: No downloads initiated for ADAM ID 999"; exit 1; fi
+           echo "==> Installed $2"; exit 0 ;;
+esac
+exit 0

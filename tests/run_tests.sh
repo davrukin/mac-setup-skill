@@ -194,7 +194,18 @@ check "tier-1 recommendations added" grep -q 'brew "ripgrep"' "$TMP/dry.out"
 check "install command is printed" grep -q "brew bundle install --file=" "$TMP/dry.out"
 python3 "$SCRIPTS/deploy.py" --preset developer --no-recs --run > "$TMP/run.out"
 check "Brewfile written to data/brewfiles" test -f "$MAC_SETUP_DATA/brewfiles/developer.Brewfile"
-check "brew bundle install invoked" grep -q "fake brew: bundle install" "$TMP/run.out"
+check "install runs item by item" grep -q "fake brew: install" "$TMP/run.out"
+check "progress is printed before each item" grep -qE '^\[[0-9]+/[0-9]+\] ' "$TMP/run.out"
+check "a log file is written" bash -c "ls '$MAC_SETUP_DATA'/logs/developer-*.log >/dev/null"
+check "run ends with a summary" grep -q "installed " "$TMP/run.out"
+SCRIPTS_DIR="$SCRIPTS" python3 - <<'PY' > "$TMP/fail.out" 2>&1 || true
+import os, sys; sys.path.insert(0, os.environ["SCRIPTS_DIR"])
+import install
+sys.exit(install.run({"brews": ["failing-tool", "git"], "mas": [{"name": "Ghost", "id": 999}]}, "failcase", skip_update=True))
+PY
+check "failures are explained and listed" bash -c "grep -q 'failing-tool exploded' '$TMP/fail.out' && grep -q 'App Store did not start the download' '$TMP/fail.out' && grep -q 'Failed:' '$TMP/fail.out'"
+check "a failed list is saved" bash -c "ls '$MAC_SETUP_DATA'/logs/failcase-*.failed.txt >/dev/null"
+check "items after a failure still install" grep -q "fake brew: install git" "$TMP/fail.out"
 check "non-interactive run without --preset fails clearly" bash -c "! python3 '$SCRIPTS/deploy.py' < /dev/null 2>'$TMP/err.out' && grep -q -- '--preset' '$TMP/err.out'"
 
 echo "== verification =="

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniel Avrukin
+# Stand-in for the VS Code CLI used by tests/run_tests.sh.
+case "${1:-}" in
+  --list-extensions) exit 0 ;;
+  --install-extension) echo "Installed $2"; exit 0 ;;
+esac
+exit 0
