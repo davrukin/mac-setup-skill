@@ -254,12 +254,14 @@ def cask_index() -> dict | None:
     apps: dict[str, list[str]] = {}
     bundles: dict[str, list[str]] = {}
     unusable: set[str] = set()
+    conflicts: dict[str, set[str]] = {}
     for cask in casks:
         token = cask.get("token")
         if not token:
             continue
         if cask.get("deprecated") or cask.get("disabled"):
             unusable.add(token)
+        conflicts[token] = set((cask.get("conflicts_with") or {}).get("cask") or [])
         for artifact in cask.get("artifacts", []):
             if not isinstance(artifact, dict):
                 continue
@@ -278,7 +280,7 @@ def cask_index() -> dict | None:
                 for path in _as_list(entry.get("delete")):
                     if path.endswith(".app"):
                         apps.setdefault(path.rsplit("/", 1)[-1][:-4].lower(), []).append(token)
-    _CASK_INDEX = {"apps": apps, "bundles": bundles, "unusable": unusable}
+    _CASK_INDEX = {"apps": apps, "bundles": bundles, "unusable": unusable, "conflicts": conflicts}
     return _CASK_INDEX
 
 
