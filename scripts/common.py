@@ -188,8 +188,7 @@ def exclusion_names(presets: dict) -> set[str]:
     preset = normalize_preset(preset)
     names = set(preset["brews"]) | set(preset["casks"]) | set(preset["vscode"])
     names |= {short_name(n) for n in preset["brews"]}
-    for m in preset["mas"]:
-        names |= {m["name"], str(m["id"])}
+    names |= {str(m["id"]) for m in preset["mas"]}  # by id: two App Store apps can share a name
     return names
 
 
