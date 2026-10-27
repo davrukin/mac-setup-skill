@@ -11,6 +11,7 @@
 #   setup.sh recommend [args]   tiered suggestions for a preset
 #   setup.sh presets <cmd>      list | show | import | export | delete | exclude | include | excludes
 #   setup.sh verify [args]      check presets for conflicts, deprecated packages, duplicates; fix library placement
+#   setup.sh setapp             record which apps run through Setapp, so deploy leaves them to Setapp
 #   setup.sh manual [args]      write data/manual-installs.md: where to get apps Homebrew cannot install
 #
 # Flags: -y/--yes  skip confirmation prompts.   --with-ai  install litellm for LLM features.
@@ -135,6 +136,7 @@ case "$CMD" in
   deploy)    require_mac; ensure_brew; ensure_python; run_py deploy.py ${REST[@]+"${REST[@]}"} ;;
   recommend) ensure_python; run_py recommend.py ${REST[@]+"${REST[@]}"} ;;
   verify)    ensure_python; run_py verify.py ${REST[@]+"${REST[@]}"} ;;
+  setapp)    ensure_python; run_py setapp.py ${REST[@]+"${REST[@]}"} ;;
   manual)    ensure_python; run_py manual_apps.py ${REST[@]+"${REST[@]}"} ;;
   presets)   ensure_python; run_py presets.py ${REST[@]+"${REST[@]}"} ;;
   menu)      ensure_python; menu ;;

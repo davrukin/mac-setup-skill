@@ -75,6 +75,12 @@ def render(data: dict, inventory: dict, categories: list[str]) -> tuple[str, lis
             apps = ", ".join(e.get("apps", []))
             lines.append(f"| {apps} | {get_it(e)} | {e.get('note', '')} |".replace("\n", " "))
         lines.append("")
+    setapp = inventory.get("setapp_apps", [])
+    if setapp:
+        lines += ["## Setapp apps", "",
+                  f"These {len(setapp)} apps are installed through Setapp on the audited Mac. Install Setapp (`brew install --cask setapp`), "
+                  "sign in, and add them from inside it. Installing them any other way (for example Homebrew) leaves Setapp unaware of the license.", "",
+                  *[f"- {a}" for a in setapp], ""]
     casks = sorted({e["cask"] for e in entries if e.get("cask") and e.get("category") != "not_needed"})
     if casks:
         lines += ["## Casks Homebrew does have", "",

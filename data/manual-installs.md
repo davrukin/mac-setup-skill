@@ -90,6 +90,43 @@ _Could not be identified or sourced; decide yourself._
 | TeslaTunes | Source unknown | No official download found by search. If you still use it, find the installer from where you originally got it. |
 | Whiteboard, Task Manager TMOG | Source unknown | Could not identify these from their bundle ids (dev.fast.review, com.tmog.taskmanager); no download source found. |
 
+## Setapp apps
+
+These 32 apps are installed through Setapp on the audited Mac. Install Setapp (`brew install --cask setapp`), sign in, and add them from inside it. Installing them any other way (for example Homebrew) leaves Setapp unaware of the license.
+
+- AlDente Pro
+- Bartender
+- BetterTouchTool
+- Boom 3D
+- CameraBag Pro
+- Chronicle
+- CleanMyMac
+- DevUtils
+- Disk Drill
+- Filmage Editor
+- Flinto
+- Godspeed
+- iBoysoft NTFS for Mac
+- JoyTap
+- Luminar
+- Luminar Neo
+- Marked
+- Merlin Project Express
+- MetaImage
+- MonsterWriter
+- NetSpot
+- PhotosRevive
+- Prizmo
+- Proxyman
+- Receipts
+- Soulver
+- Swift Publisher
+- Taphouse
+- Taskheat
+- TouchRetouch
+- Tripsy
+- WiFi Explorer
+
 ## Casks Homebrew does have
 
 Some entries above have a working cask under a different name. To install them with your presets, add:

@@ -33,6 +33,7 @@ Needs macOS, `python3` (installed with the Xcode command line tools), and Homebr
 | `setup.sh deploy [--preset NAME] [--exclude a,b] [--include-recs 1\|2\|3] [--dry-run] [--run]` | Preset to Brewfile to install command |
 | `setup.sh game [--categories a,b:key] [--redo] [--icons off]` | Sorting game: swipe through everything installed and pick a category for each, with descriptions and app icons |
 | `setup.sh verify [--apply] [--set CAT KEY...]` | Check presets for conflicts, deprecated packages and duplicates; place libraries with their dependents |
+| `setup.sh setapp` | Record which apps run through Setapp, so `deploy` leaves them to Setapp (a fresh audit does this itself) |
 | `setup.sh manual` | Write `data/manual-installs.md`: where to get apps Homebrew cannot install |
 | `setup.sh presets list\|show\|import\|export\|delete` | Manage presets, including importing someone else's Brewfile |
 | `setup.sh presets exclude PRESET item...` (also `include`, `excludes`) | Keep an item off one preset, e.g. a common app off `developer`; saved in `data/preset_excludes.yaml` |
@@ -66,6 +67,7 @@ ChatGPT's skill packaging has changed more than once. If an upload is rejected, 
 
 Checking this repo out gives you the configuration worked out here, not a blank slate:
 
+- `docs/TROUBLESHOOTING.md`: install problems (apps in the wrong folder, Setapp, App Store errors, password prompts).
 - `docs/CONFIGURATION.md` and `docs/TEMPLATES.md`: what is configured today, and how to use these categories as a starting template for your own.
 - `references/categories.yaml`: grouping rules, the shared `common` set, and consolidation (JetBrains IDEs and Android Studio become `jetbrains-toolbox`).
 - `references/overlaps.yaml`: tools that overlap (youtube-dl/yt-dlp and others), which `verify` reports.
@@ -84,7 +86,7 @@ Use `setup.sh --new-run ...` to start clean in `data/runs/<date_time>` without t
 ```
 SKILL.md              instructions for the assistant
 scripts/              setup.sh + audit.py, game.py, verify.py, manual_apps.py, categorize.py, recommend.py, deploy.py, presets.py, common.py, ai_skill.py
-docs/                 CONFIGURATION.md, TEMPLATES.md
+docs/                 CONFIGURATION.md, TEMPLATES.md, TROUBLESHOOTING.md
 references/           categories.yaml, overlaps.yaml, recommended_seed.yaml, schemas.md, web-research.md
 agents/openai.yaml    ChatGPT skill UI metadata
 data/                 tuned presets, game choices, inventory, manual installs (runs/ is git-ignored)

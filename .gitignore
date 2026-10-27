@@ -13,3 +13,6 @@ __pycache__/
 
 # Scratch runs from setup.sh --new-run
 data/runs/
+
+# Install logs written by deploy --run
+data/logs/

@@ -51,6 +51,8 @@ Built from those choices in `data/presets.yaml`. Each preset includes `common`, 
 - **Library placement:** `verify` puts a library formula in the same category as the tools that depend on it, so it is never installed without its dependents.
 - **Conflicts and deprecated packages:** `verify` flags them, and `deploy --run` refuses to start while any would break `brew bundle` (override with `--ignore-problems`).
 - **ArtCraft folder:** the Craft casks (artcraft, cadcraft, deckcraft, designcraft, effectcraft, filmcraft, gridcraft, lightcraft, pdfcraft, photocraft, soundcraft, vectorcraft, wordcraft) declare their own install target under `/Applications/ArtCraft/`, so `brew bundle` puts them there and nothing in this repo needs configuring. If the folder is missing after an install, create it first with `mkdir /Applications/ArtCraft`. `photocraft-cli` is a formula and is not in the folder.
+- **Setapp apps** are installed from Setapp, not Homebrew, so Setapp knows the license. `deploy` leaves their casks out; see `docs/TROUBLESHOOTING.md`.
+- **Installing** (`deploy --run`) goes item by item with live progress, a log in `data/logs/` (git-ignored) and a list of failures. App Store apps go last.
 - **Pre-installed Apple apps** such as GarageBand and iMovie are in `not_needed`.
 
 ## How to change it

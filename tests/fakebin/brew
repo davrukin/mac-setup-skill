@@ -33,6 +33,9 @@ JSON
 JSON
     exit 0 ;;
   formulae) printf '%s\n' git jq ripgrep fd fzf gh exiftool ffmpeg imagemagick wget mas bat eza; exit 0 ;;
+  list|tap) exit 0 ;;
+  install) case "$*" in *failing-tool*) echo "Error: failing-tool exploded"; exit 1 ;; esac
+           echo "fake brew: $*"; exit 0 ;;
   bundle)
     sub="${2:-}"
     if [ "$sub" = "dump" ]; then

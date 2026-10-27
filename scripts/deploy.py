@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 import common
+import install
 import verify
 import recommend as rec
 
@@ -85,7 +86,9 @@ def main() -> None:
     ap.add_argument("--output", help="where to write the Brewfile (default: data/brewfiles/<preset>.Brewfile)")
     ap.add_argument("--dry-run", action="store_true", help="print the Brewfile and command, change nothing")
     ap.add_argument("--ignore-problems", action="store_true", help="install even if verification found conflicts or disabled packages")
-    ap.add_argument("--run", action="store_true", help="run `brew bundle install` after writing the Brewfile")
+    ap.add_argument("--run", action="store_true", help="install the preset after writing the Brewfile, item by item with progress and a log")
+    ap.add_argument("--skip-update", action="store_true", help="with --run: do not run `brew update` first")
+    ap.add_argument("--skip-mas", action="store_true", help="with --run: leave the Mac App Store apps for later")
     args = ap.parse_args()
 
     store = common.load_presets()["presets"]
@@ -104,6 +107,11 @@ def main() -> None:
     if own:
         print(f"🚫 Leaving out {len(own)} item(s) you excluded for '{name}': {', '.join(sorted(own, key=str.lower))}")
         excludes |= own
+    setapp = common.setapp_casks() & set(preset.get("casks") or [])
+    if setapp:
+        print(f"🧩 {len(setapp)} app(s) belong to Setapp, so Homebrew will not install them: {', '.join(sorted(setapp))}.\n"
+              "   Install Setapp, sign in, and add them from inside it so your subscription covers them (see data/manual-installs.md).")
+        excludes |= setapp
     if excludes:
         preset, removed = apply_excludes(preset, excludes)
         print(f"➖ Excluded {len(removed)} item(s) from this preset: {', '.join(removed) or 'none matched'}")
@@ -140,6 +148,7 @@ def main() -> None:
 
     command = ["brew", "bundle", "install", f"--file={path}"]
     print("\nInstall command:\n  " + " ".join(shlex.quote(c) for c in command))
+    print("  (--run does the same installs one item at a time with live progress, a log file and a list of failures.)")
     if preset["mas"]:
         print("  (Mac App Store apps need you signed in to the App Store on this Mac first.)")
     if args.dry_run:
@@ -151,13 +160,10 @@ def main() -> None:
     if run_now:
         if not common.have("brew"):
             sys.exit("❌ Homebrew is not installed. Run scripts/setup.sh bootstrap first.")
-        print("📦 Installing via Homebrew...")
-        result = subprocess.run(command)
-        if result.returncode == 0:
+        code = install.run(preset, name, skip_update=args.skip_update, skip_mas=args.skip_mas)
+        if code == 0:
             print("🎉 Installation complete.")
-        else:
-            print(f"⚠️  brew exited with code {result.returncode}. Fix the failures above and re-run the same command; finished items are skipped.")
-            sys.exit(result.returncode)
+        sys.exit(code)
 
 
 if __name__ == "__main__":
