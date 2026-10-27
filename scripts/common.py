@@ -160,8 +160,28 @@ def taps_needed(preset: dict) -> list[str]:
 # --------------------------------------------------------------------------
 # Shelling out
 # --------------------------------------------------------------------------
+def _homebrew_dirs() -> list[str]:
+    override = os.environ.get("MAC_SETUP_BREW_DIRS")  # used by the test suite
+    return [d for d in override.split(os.pathsep) if d] if override is not None else ["/opt/homebrew/bin", "/usr/local/bin"]
+
+
 def have(cmd: str) -> bool:
-    return shutil.which(cmd) is not None
+    """True if cmd can run. A terminal that never loaded Homebrew's shell setup does not have brew (or mas, or
+    anything Homebrew installed) on PATH, so Homebrew's usual folders are checked too and added to PATH if used."""
+    if shutil.which(cmd):
+        return True
+    for folder in _homebrew_dirs():
+        if os.access(os.path.join(folder, cmd), os.X_OK):
+            os.environ["PATH"] = folder + os.pathsep + os.environ.get("PATH", "")
+            return True
+    return False
+
+
+def require_brew(task: str) -> None:
+    """Stop with a clear message when Homebrew is missing, instead of reporting that nothing is installed."""
+    if not have("brew"):
+        sys.exit(f"❌ Homebrew is not installed on this Mac (or not found in /opt/homebrew or /usr/local), so {task} cannot work.\n"
+                 "   Install it with: scripts/setup.sh bootstrap   (it asks before downloading anything), then run this again.")
 
 
 def run(cmd: list[str], timeout: int = 180) -> str | None:
