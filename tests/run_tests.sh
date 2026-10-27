@@ -244,6 +244,18 @@ MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --apply 
 check "relocate --apply moves the app into its folder and adopts it" bash -c "[ -d '$TMP/Apps/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps/CADCraft.app' ] && grep -q 'install --cask --adopt cadcraft' '$TMP/rel2.out'"
 check "relocate never moves Setapp apps" bash -c "[ -d '$TMP/Apps/Ghost.app' ] && [ -d '$TMP/Apps/Soulver.app' ]"
 
+echo "== no Homebrew on PATH =="
+PY3="$(command -v python3)"
+for entry in "missing:--preset dev" "relocate:" "verify:"; do
+  cmd="${entry%%:*}"; extra="${entry#*:}"
+  check "$cmd says Homebrew is missing instead of reporting nothing installed" bash -c "
+    out=\$(env PATH=/usr/bin:/bin MAC_SETUP_BREW_DIRS=/nonexistent MAC_SETUP_DATA='$TMP/ms' '$PY3' '$SCRIPTS/$cmd.py' $extra 2>&1); code=\$?
+    [ \$code -ne 0 ] && echo \"\$out\" | grep -q 'Homebrew is not installed' && ! echo \"\$out\" | grep -qi 'missing:'"
+done
+mkdir -p "$TMP/hb" && cp "$HERE/fakebin/brew" "$TMP/hb/brew"
+check "brew in Homebrew's own folder is found even when PATH lacks it" bash -c "
+  env PATH=/usr/bin:/bin MAC_SETUP_BREW_DIRS='$TMP/hb' MAC_SETUP_DATA='$TMP/ms' '$PY3' '$SCRIPTS/missing.py' --preset dev 2>&1 | grep -q 'items in'"
+
 echo "== verification =="
 check "conflicts, disabled, deprecated, duplicates and overlaps are found" py "
 import sys;sys.path.insert(0,'$SCRIPTS');import verify
