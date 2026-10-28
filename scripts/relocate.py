@@ -11,8 +11,8 @@ preset, is ignored.
      - installed by Homebrew: move the app, remove Homebrew's old record (the app is no longer at the path it
        names, so only the record goes), then `brew install --cask --adopt NAME` links it at the new path.
      - not installed by Homebrew: move the app, then `brew install --cask --adopt NAME`.
-     Neither downloads anything. They need Homebrew's current definition of the cask to name the folder, so
-     it runs `brew update` first; apps whose definition still names none are listed as "cannot be linked yet".
+     The link step may fetch the cask's download to compare it with your app (which is kept), and only works if
+     the app on disk matches it.
 2. Setapp apps. They are never moved or installed: Setapp records a license only for an app it installs
    itself. The script lists every Setapp app in your category (from inventory.json) with its state on this Mac,
    writes data/setapp-to-install.md for you to work through, and with --apply removes the Homebrew-installed
@@ -282,6 +282,8 @@ def main() -> None:
         print(f"   Moved {len(moved)}" + (f", skipped {len(skipped)}: {', '.join(skipped)}" if skipped else "") + ".")
 
         print("\n━━ Step 2 of 2: linking them to Homebrew ━━")
+        print("   Homebrew has no 'relink' command, so each app is registered with `brew install --cask --adopt`. That prints\n"
+              "   'Installing' and may fetch the download to compare it, but your moved app is kept, not replaced.")
         for s in moved:
             print(f"→ {s['cask']}", flush=True)
             ok = True
