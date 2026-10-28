@@ -98,11 +98,11 @@ def plan_casks(candidates: list[str], managed: set[str]) -> tuple[list[dict], di
             if not loose:
                 status["not_found"].append(token)
                 continue
-            # "relink": Homebrew installed it, so move the app and replace its record. "adopt": Homebrew did not.
-            # Both need a definition that names the folder; without one, Homebrew would look for the app in /Applications.
-            kind = "stale" if source == "rule" else ("relink" if token in managed else "adopt")
+            # Two steps per app: move it, then link it to Homebrew. When the cask's own definition does not name the
+            # folder (source "rule"), the link step passes --appdir so Homebrew looks in the right place.
             status["to_move"].append(token)
-            steps.append({"cask": token, "kind": kind, "from": str(loose), "to": target})
+            steps.append({"cask": token, "managed": token in managed, "appdir": str(Path(target).parent) if source == "rule" else "",
+                          "from": str(loose), "to": target})
     return steps, status
 
 
@@ -175,7 +175,8 @@ def write_setapp_list(apps: list[dict], category: str) -> Path:
 
 def run_step(label: str, cmd: list[str]) -> bool:
     print(f"   $ {' '.join(cmd)}", flush=True)
-    return subprocess.run(cmd).returncode == 0
+    # Homebrew otherwise runs `brew autoremove` after an uninstall, which removes unrelated leftover dependencies.
+    return subprocess.run(cmd, env={**os.environ, "HOMEBREW_NO_AUTOREMOVE": "1"}).returncode == 0
 
 
 def main() -> None:
@@ -223,16 +224,14 @@ def main() -> None:
     if status["in_place"]:
         print(f"  ✅ already in their folder ({len(status['in_place'])}):")
         bullets(status["in_place"])
-    if status["not_found"]:
-        print(f"  ➖ not installed on this Mac: {len(status['not_found'])}")
     if not found:
         print("  Homebrew reported no cask with a home folder here. Run `brew update`, or check references/folders.yaml.")
     print(f"  ➡️  to move: {len(steps)}")
     for s in steps:
-        how = {"relink": "move, drop the old Homebrew record, brew install --cask --adopt",
-               "adopt": "move, then brew install --cask --adopt",
-               "stale": "will be moved; linking it to Homebrew has to wait, because Homebrew's definition does not name this folder yet"}[s["kind"]]
-        print(f"      • {s['cask']}: {s['from']} → {s['to']}\n          ({how})")
+        print(f"      • {s['cask']}: {s['from']} → {s['to']}")
+    if steps:
+        print("      Step 1 moves them; Step 2 links each to Homebrew (" + ("drops the old record, then " if any(x["managed"] for x in steps) else "")
+              + "brew install --cask --adopt).")
 
     def names(state: str) -> list[str]:
         return [a["app"] for a in setapp if a["state"] == state]
@@ -240,14 +239,13 @@ def main() -> None:
     print(f"\n🧩 Setapp apps in the '{name}' category: {len(setapp)}")
     for state, label in (("homebrew", "🍺 installed by Homebrew, to be removed"),
                          ("outside", "⚠️  installed some other way (left alone)"),
-                         ("setapp", "✅ already in the Setapp folder"),
-                         ("absent", "➖ not installed on this Mac")):
+                         ("setapp", "✅ already in the Setapp folder")):
         if names(state):
             print(f"  {label} ({len(names(state))}):")
             bullets(names(state))
     todo = [a["app"] for a in setapp if a["state"] != "setapp"]
-    print(f"\n  📝 To install from Setapp yourself ({len(todo)}), also saved to {write_setapp_list(setapp, name)}:")
-    bullets(todo)
+    todo_path = write_setapp_list(setapp, name)
+    print(f"\n  📝 {len(todo)} to install from Setapp yourself: the checklist is in {todo_path}")
     if not setapp:
         print("  (No Setapp apps in this category. Run `scripts/setup.sh setapp` on the Mac where Setapp is installed.)")
 
@@ -265,43 +263,38 @@ def main() -> None:
         sys.exit(0)
 
     failed = 0
-    moved: list[str] = []
+    moved: list[dict] = []
     skipped: list[str] = []
-    if steps and not common.confirm(f"\nMove {len(steps)} app(s) now? Quit them first."):
+    if steps and not common.confirm(f"\nMove {len(steps)} app(s) now, then link them to Homebrew? Quit them first."):
         print("   Nothing was moved, because the answer was not yes (use --yes to skip this question).")
     elif steps:
+        print("\n━━ Step 1 of 2: moving the apps ━━")
         for s in steps:
-            print(f"\n→ {s['cask']}", flush=True)
             if is_running(Path(s["from"])):
-                print("   skipped: the app is running; quit it and run again")
+                print(f"→ {s['cask']}: skipped, the app is running; quit it and run again")
                 skipped.append(f"{s['cask']} (running)")
                 failed += 1
                 continue
             Path(s["to"]).parent.mkdir(parents=True, exist_ok=True)
             shutil.move(s["from"], s["to"])
-            print(f"   moved to {s['to']}")
-            if s["kind"] == "stale":
-                # Homebrew would look for it in /Applications, so linking now would fail or point at the wrong place.
-                print("   not linked to Homebrew yet: its definition does not name this folder. Run `brew update`, then `relocate` again.")
-                moved.append(s["cask"])
-                continue
+            print(f"→ {s['cask']}: moved to {s['to']}", flush=True)
+            moved.append(s)
+        print(f"   Moved {len(moved)}" + (f", skipped {len(skipped)}: {', '.join(skipped)}" if skipped else "") + ".")
+
+        print("\n━━ Step 2 of 2: linking them to Homebrew ━━")
+        for s in moved:
+            print(f"→ {s['cask']}", flush=True)
             ok = True
-            if s["kind"] == "relink":
-                # The old record points at the old path; with the app gone from there, this only removes the record.
+            if s["managed"]:
+                # The old record points at the old path; the app is gone from there, so this only removes the record.
                 ok = run_step("uninstall", ["brew", "uninstall", "--cask", s["cask"]])
-            ok = ok and run_step("adopt", ["brew", "install", "--cask", "--adopt", s["cask"]])
+            adopt = ["brew", "install", "--cask", "--adopt"] + ([f"--appdir={s['appdir']}"] if s["appdir"] else []) + [s["cask"]]
+            ok = ok and run_step("adopt", adopt)
             if not ok:
-                if s["kind"] == "adopt":
-                    print("   linking to Homebrew failed; the app stays in its new folder. Finish with: brew install --cask --adopt " + s["cask"])
-                else:
-                    print(f"   the app is now at {s['to']} but Homebrew is not linked to it; finish with: brew install --cask --adopt {s['cask']}")
-            if not Path(s["to"]).exists():
-                print(f"   ⚠️  finished, but nothing is at {s['to']}")
-                ok = False
-            print("   ✅ done" if ok else "   ❌ failed")
-            moved.append(s["cask"])
-            failed += 0 if ok else 1
-        print(f"\n📦 Moved {len(moved)}: {', '.join(moved) or 'none'}" + (f"   Skipped {len(skipped)}: {', '.join(skipped)}" if skipped else ""))
+                print(f"   ❌ could not link it; the app is safe at {s['to']}. Finish with: {' '.join(adopt)}")
+                failed += 1
+            else:
+                print("   ✅ linked")
     if brew_copies and not args.keep_homebrew_setapp and common.confirm(
             f"\nRemove the {len(brew_copies)} Homebrew copies of Setapp apps so you can install them from Setapp? (Your data is kept.)"):
         for token in brew_copies:
@@ -309,8 +302,7 @@ def main() -> None:
             if not run_step("uninstall", ["brew", "uninstall", "--cask", token]):
                 failed += 1
     if todo:
-        print("\nNext: open Setapp, sign in, and install and license these yourself:")
-        bullets(todo, "  ")
+        print(f"\nNext: open Setapp, sign in, and install and license the apps on the checklist ({todo_path}).")
     sys.exit(1 if failed else 0)
 
 

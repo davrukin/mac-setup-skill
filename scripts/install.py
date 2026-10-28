@@ -125,7 +125,7 @@ def run(preset: dict, name: str, skip_update: bool = False, skip_mas: bool = Fal
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     log_path = LOG_DIR / f"{name}-{stamp}.log"
-    env = {**os.environ, "HOMEBREW_NO_ENV_HINTS": "1", "HOMEBREW_NO_AUTO_UPDATE": "1"}
+    env = {**os.environ, "HOMEBREW_NO_ENV_HINTS": "1", "HOMEBREW_NO_AUTO_UPDATE": "1", "HOMEBREW_NO_AUTOREMOVE": "1"}
     counts = {k: sum(1 for s in steps if s.kind == k) for k in ("tap", "brew", "cask", "vscode", "mas")}
     print(f"📦 Installing '{name}': {counts['brew']} command-line tools, {counts['cask']} apps, "
           f"{counts['mas']} App Store apps, {counts['vscode']} editor extensions.")
