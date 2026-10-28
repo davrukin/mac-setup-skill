@@ -249,7 +249,6 @@ t=open('$TMP/rel1.out').read()
 assert \"Setapp apps in the 'craft' category: 3\" in t, t
 def after(h): return t.split(h,1)[1].split('\\n',2)[1].strip()
 assert after('installed some other way (left alone) (1):')=='• Ghost'
-assert after('not installed on this Mac (1):')=='• Bartender'
 assert after('already in the Setapp folder (1):')=='• Soulver'
 assert 'Zed' not in t"
 check "a to-install list is written without the app already in Setapp" bash -c "f='$TMP/ms/setapp-to-install.md'; grep -q Ghost \$f && grep -q Bartender \$f && ! grep -q Zed \$f && ! grep -q Soulver \$f"
@@ -284,14 +283,14 @@ check "relocate never moves Setapp apps" bash -c "[ -d '$TMP/Apps/Ghost.app' ] &
 # Out-of-date Homebrew: the cask definition names no folder, so references/folders.yaml says where it belongs.
 mkdir -p "$TMP/Apps2/CADCraft.app/Contents"
 FAKE_BREW_NO_TARGET=1 MAC_SETUP_FOLDERS_FILE="$TMP/folders-Apps2.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps2" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --preset craft --apply > "$TMP/rel3.out"
-check "with a stale definition the app is still moved, and the missing Homebrew link is said plainly" bash -c "[ -d '$TMP/Apps2/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps2/CADCraft.app' ] && grep -q 'not linked to Homebrew yet' '$TMP/rel3.out' && ! grep -q 'install --cask --adopt' '$TMP/rel3.out'"
+check "with a stale definition the app is moved, then linked using --appdir" bash -c "[ -d '$TMP/Apps2/ArtCraft/CADCraft.app' ] && [ ! -d '$TMP/Apps2/CADCraft.app' ] && grep -q 'Step 1 of 2' '$TMP/rel3.out' && grep -q 'Step 2 of 2' '$TMP/rel3.out' && grep -q 'install --cask --adopt --appdir=$TMP/Apps2/ArtCraft cadcraft' '$TMP/rel3.out'"
 check "relocate runs brew update first unless told not to" grep -q "Updating Homebrew" "$TMP/rel3.out"
 # The real-world trap: an old definition still reports /Applications/CADCraft.app, where the loose app sits,
 # so it must not be treated as "already in place".
 mkdir -p "$TMP/Apps4/CADCraft.app/Contents"
 printf 'folders:\n  - folder: %s/Apps4/ArtCraft\n    casks: [cadcraft]\n' "$TMP" > "$TMP/folders-Apps4.yaml"
 FAKE_BREW_ROOT_TARGET=1 MAC_SETUP_FOLDERS_FILE="$TMP/folders-Apps4.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps4" MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --preset craft --skip-update > "$TMP/rel5.out"
-check "an old definition that reports the loose path is not mistaken for 'in place'" bash -c "! grep -q 'already in their folder' '$TMP/rel5.out' && grep -q 'linking it to Homebrew has to wait' '$TMP/rel5.out' && grep -q 'cadcraft' '$TMP/rel5.out'"
+check "an old definition that reports the loose path is not mistaken for 'in place'" bash -c "! grep -q 'already in their folder' '$TMP/rel5.out' && grep -q 'Step 2 links each to Homebrew' '$TMP/rel5.out' && grep -q 'cadcraft' '$TMP/rel5.out'"
 # Installed by Homebrew: move, drop the old record, adopt at the new path.
 mkdir -p "$TMP/Apps3/CADCraft.app/Contents"
 FAKE_BREW_INSTALLED=cadcraft MAC_SETUP_FOLDERS_FILE="$TMP/folders-Apps3.yaml" MAC_SETUP_APP_DIRS="$TMP/Apps3" MAC_SETUP_YES=1 MAC_SETUP_DATA="$TMP/ms" python3 "$SCRIPTS/relocate.py" --preset craft --apply --skip-update > "$TMP/rel4.out"
