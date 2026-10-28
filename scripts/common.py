@@ -44,6 +44,16 @@ def empty_preset(description: str = "", source: str = "") -> dict:
     }
 
 
+def folder_rules() -> dict[str, str]:
+    """{cask: folder} from references/folders.yaml, for when Homebrew's definition does not name the folder."""
+    try:
+        path = Path(os.environ.get("MAC_SETUP_FOLDERS_FILE") or REFERENCES_DIR / "folders.yaml")  # env: tests
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+    return {str(c): str(f["folder"]) for f in data.get("folders", []) for c in f.get("casks", [])}
+
+
 def setapp_casks() -> set[str]:
     """Casks whose apps live in a Setapp folder on the audited Mac; install those from Setapp, not Homebrew."""
     try:

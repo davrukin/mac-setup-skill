@@ -80,7 +80,7 @@ def main() -> None:
     if not store:
         sys.exit(f"❌ No presets found at {common.PRESETS_FILE}.")
     name = deploy.pick_preset(store, args.preset)
-    preset, _ = deploy.effective_preset(name, store, {e.strip() for e in args.exclude.split(",") if e.strip()})
+    preset, _ = deploy.effective_preset(name, store, {e.strip() for e in args.exclude.split(",") if e.strip()}, verbose=False)
     print(f"\n🔍 Checking '{name}' against this Mac...", flush=True)
     state = classify(preset)
 

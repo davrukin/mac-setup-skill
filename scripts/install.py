@@ -146,6 +146,7 @@ def run(preset: dict, name: str, skip_update: bool = False, skip_mas: bool = Fal
             elif s.kind == "mas":
                 s.note = "App Store download; you must be signed in to the App Store"
 
+        folders = common.folder_rules()  # casks that live in their own folder (the ArtCraft apps)
         stop = threading.Event()
         needs = sorted(admin, key=str.lower)
         if needs and sys.stdin.isatty() and not os.environ.get("MAC_SETUP_NO_SUDO") and common.have("sudo"):
@@ -170,6 +171,13 @@ def run(preset: dict, name: str, skip_update: bool = False, skip_mas: bool = Fal
                     results["skipped"].append(step.name)
                     continue
                 print(f"{head}" + (f"  ({step.note})" if step.note else "") + "  ...", flush=True)
+                folder = folders.get(step.name) if step.kind == "cask" else None
+                if folder and not Path(folder).is_dir():
+                    try:
+                        Path(folder).mkdir(parents=True, exist_ok=True)
+                        print(f"      📁 created {folder}", flush=True)
+                    except OSError as exc:
+                        print(f"      ⚠️  could not create {folder}: {exc}", flush=True)
                 log.write(f"\n=== {head}: {' '.join(step.cmd)}\n")
                 t0 = time.time()
                 code, output = stream(step.cmd, log, env)

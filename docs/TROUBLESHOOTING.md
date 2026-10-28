@@ -6,11 +6,11 @@
 
 The Craft casks (artcraft, cadcraft, deckcraft, designcraft, effectcraft, filmcraft, gridcraft, lightcraft, pdfcraft, photocraft, soundcraft, vectorcraft, wordcraft) put themselves in `/Applications/ArtCraft/` through the install path in their current Homebrew definition. If they landed loose in `/Applications`, the Homebrew on that Mac was most likely holding older cask definitions that had no such path. `deploy --run` now runs `brew update` first to prevent that.
 
-The script does this for you, and shows its plan first:
+The script does this for you, and shows its plan first. It works on one category (preset) at a time: anything in `not_needed`, or that you excluded for that preset, is ignored and not listed. It also creates the folder (`/Applications/ArtCraft`) if it does not exist, and the installer creates it before installing a Craft cask into it.
 
 ```bash
-scripts/setup.sh relocate            # plan only; nothing changes
-scripts/setup.sh relocate --apply    # do it (quit the apps first)
+scripts/setup.sh relocate --preset developer            # plan only; nothing changes
+scripts/setup.sh relocate --preset developer --apply    # do it (quit the apps first)
 ```
 
 `relocate` runs `brew update` first, because the folder comes from the cask's current definition and an out-of-date Homebrew does not name it. Then, for each Craft app sitting loose in `/Applications`:
@@ -29,7 +29,7 @@ Setapp licenses its apps through its own app, so installing the same app with Ho
 
 For an inventory made before this existed, run `scripts/setup.sh setapp` once.
 
-`scripts/setup.sh relocate` lists **every Setapp app in your category** (the Setapp apps recorded in `inventory.json` from the Mac you audited), with its state on this Mac: installed by Homebrew, installed some other way, already in the Setapp folder, or not installed. It writes `data/setapp-to-install.md`, a checklist of the ones to add yourself. It never moves or installs Setapp apps, because Setapp records a license only for an app it installs itself.
+`scripts/setup.sh relocate --preset NAME` lists the **Setapp apps in that category**, one per line, (from the Setapp apps recorded in `inventory.json` on the Mac you audited, filtered to the apps that belong to the category), with its state on this Mac: installed by Homebrew, installed some other way, already in the Setapp folder, or not installed. It writes `data/setapp-to-install.md`, a checklist of the ones to add yourself. It never moves or installs Setapp apps, because Setapp records a license only for an app it installs itself.
 
 With `--apply` it removes the Homebrew-installed copies (`brew uninstall --cask`, never `--zap`, so your data stays) and asks first. Add `--keep-homebrew-setapp` to leave them. Then open Setapp, sign in, and install and license the apps on the checklist.
 
