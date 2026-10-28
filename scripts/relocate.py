@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Daniel Avrukin
-"""Put apps where their casks say they belong, and list the apps that must come from Setapp.
+"""Put the apps of one category (preset) where their casks say they belong, and list its Setapp apps.
+
+Only the category you pick is considered: anything in the not_needed list, or that you excluded for that
+preset, is ignored.
 
 1. Casks that install into a folder, such as the Craft apps in /Applications/ArtCraft. If the app sits
    loose in /Applications instead:
@@ -28,19 +31,8 @@ import sys
 from pathlib import Path
 
 import audit
-import yaml
-
 import common
-
-
-def folder_rules() -> dict[str, str]:
-    """{cask: folder} from references/folders.yaml, for when Homebrew's definition does not name the folder."""
-    try:
-        path = Path(os.environ.get("MAC_SETUP_FOLDERS_FILE") or common.REFERENCES_DIR / "folders.yaml")  # env: tests
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except (OSError, yaml.YAMLError):
-        return {}
-    return {str(c): str(f["folder"]) for f in data.get("folders", []) for c in f.get("casks", [])}
+import deploy
 
 
 def cask_targets(casks: list[str]) -> dict[str, list[tuple[str, str, str]]]:
@@ -54,7 +46,7 @@ def cask_targets(casks: list[str]) -> dict[str, list[tuple[str, str, str]]]:
         data = json.loads(out)
     except ValueError:
         return result
-    rules = folder_rules()
+    rules = common.folder_rules()
     roots = {Path(r) for r in audit.app_dirs()}
     for cask in data.get("casks", []):
         token = cask["token"]
@@ -102,8 +94,34 @@ def plan_casks(candidates: list[str], managed: set[str]) -> tuple[list[dict], di
     return steps, status
 
 
-def plan_setapp(managed: set[str]) -> list[dict]:
-    """Every Setapp app in the category (the audited Mac's Setapp apps), with its state on THIS Mac:
+def category_setapp_apps(name: str, store: dict, inventory: dict) -> list[str]:
+    """The Setapp apps that belong to preset `name`: those whose cask is in it, and those with no cask that were
+    filed under this category (or under common) in manual_apps.json. not_needed and your excludes are left out."""
+    left_out = common.exclusion_names(store) | set(common.load_preset_excludes().get(name, []))
+    casks = {c for c in store[name].get("casks", []) if c not in left_out}
+    try:
+        manual = json.loads((common.DATA_DIR / "manual_apps.json").read_text(encoding="utf-8"))
+        filed = {a: e.get("category") for e in manual.get("entries", []) for a in e.get("apps", [])}
+    except (OSError, ValueError):
+        filed = {}
+    mapping = inventory.get("setapp_map", {})
+    keep = []
+    for app in inventory.get("setapp_apps", []):
+        if app in left_out:
+            continue
+        cask = mapping.get(app)
+        if name == "current_system":
+            keep.append(app)
+        elif cask:
+            if cask in casks:
+                keep.append(app)
+        elif filed.get(app) in (name, "common"):
+            keep.append(app)
+    return keep
+
+
+def plan_setapp(managed: set[str], name: str, store: dict) -> list[dict]:
+    """The Setapp apps of this category, with their state on THIS Mac:
     homebrew (a cask installed it: to be removed), outside (present, but not through Setapp),
     setapp (already in the Setapp folder), absent (not installed). Each entry also says which cask it is."""
     try:
@@ -113,11 +131,11 @@ def plan_setapp(managed: set[str]) -> list[dict]:
     mapping = inventory.get("setapp_map", {})
     known = set(inventory.get("setapp_casks", []))
     out = []
-    for name in inventory.get("setapp_apps", []):
+    for app in category_setapp_apps(name, store, inventory):
         # The cask recorded on the audited Mac, else any installed cask named like the app (Bartender -> bartender).
-        cask = mapping.get(name) or next((c for c in common.cask_candidates(name) if c in managed or c in known), "")
-        loose = any((root / f"{name}.app").exists() for root in audit.app_dirs())
-        in_setapp = any((root / "Setapp" / f"{name}.app").exists() for root in audit.app_dirs())
+        cask = mapping.get(app) or next((c for c in common.cask_candidates(app) if c in managed or c in known), "")
+        loose = any((root / f"{app}.app").exists() for root in audit.app_dirs())
+        in_setapp = any((root / "Setapp" / f"{app}.app").exists() for root in audit.app_dirs())
         if cask and cask in managed:
             state = "homebrew"
         elif in_setapp:
@@ -126,13 +144,13 @@ def plan_setapp(managed: set[str]) -> list[dict]:
             state = "outside"
         else:
             state = "absent"
-        out.append({"app": name, "cask": cask, "state": state, "also_in_setapp": in_setapp})
+        out.append({"app": app, "cask": cask, "state": state, "also_in_setapp": in_setapp})
     return out
 
 
-def write_setapp_list(apps: list[dict]) -> Path:
+def write_setapp_list(apps: list[dict], category: str) -> Path:
     todo = [a for a in apps if a["state"] != "setapp"]
-    lines = ["# Setapp apps to install and license yourself", "",
+    lines = [f"# Setapp apps to install and license yourself ({category})", "",
              "Open Setapp, sign in, and install each of these from inside it. Setapp only records a license for an app it installs "
              "itself, so these are not installed or moved by the scripts.", ""]
     lines += [f"- [ ] {a['app']}" + ("  _(a Homebrew copy was removed)_" if a["state"] == "homebrew" else "") for a in todo]
@@ -150,6 +168,7 @@ def run_step(label: str, cmd: list[str]) -> bool:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--preset", help="the category (preset) to work on; anything outside it is ignored (default: ask)")
     ap.add_argument("--apply", action="store_true", help="do it (default: only show the plan)")
     ap.add_argument("--skip-update", action="store_true", help="do not run `brew update` first")
     ap.add_argument("--keep-homebrew-setapp", action="store_true",
@@ -159,48 +178,76 @@ def main() -> None:
 
     managed = {ln.strip() for ln in (common.run(["brew", "list", "--cask", "-1"]) or "").splitlines() if ln.strip()}
     store = common.load_presets()["presets"]
+    if not store:
+        sys.exit(f"❌ No presets found at {common.PRESETS_FILE}.")
+    name = deploy.pick_preset(store, args.preset)
+    preset, _ = deploy.effective_preset(name, store, verbose=False)
+    print(f"\n📂 Category '{name}': {common.preset_size(preset)} items after leaving out everything not needed or excluded.")
+    wanted = list(preset.get("casks") or [])  # this category's casks, without not_needed, your excludes or Setapp's
     if not args.skip_update:
-        print("🔄 Updating Homebrew so cask definitions (which say where each app belongs) are current...", flush=True)
+        print("\n🔄 Updating Homebrew so cask definitions (which say where each app belongs) are current...", flush=True)
         subprocess.run(["brew", "update"], capture_output=True)
-    candidates = sorted(managed | set(folder_rules()) | {c for p in store.values() for c in p.get("casks", [])})
-    print("🔍 Looking for apps in the wrong folder...", flush=True)
-    steps, status = plan_casks(candidates, managed)
-    setapp = plan_setapp(managed)
+    print(f"\n🔍 Looking at the '{name}' category for apps in the wrong folder...", flush=True)
+    steps, status = plan_casks(sorted(wanted), managed)
+    setapp = plan_setapp(managed, name, store)
     brew_copies = [a["cask"] for a in setapp if a["state"] == "homebrew"]
+    rules = common.folder_rules()
+    folders = sorted({rules[c] for c in wanted if c in rules})
 
+    def bullets(items: list[str], indent: str = "      ") -> None:
+        for item in items:
+            print(f"{indent}• {item}")
+
+    print("\n📁 Folders for this category's apps:")
+    for folder in folders:
+        print(f"  {folder}  ({'exists' if Path(folder).is_dir() else 'will be created'})")
+    if not folders:
+        print("  none")
     found = sum(len(v) for v in status.values())
     print(f"\n📁 Apps with a home folder: {found} checked")
     if status["in_place"]:
-        print(f"  ✅ already in their folder ({len(status['in_place'])}): {', '.join(status['in_place'])}")
+        print(f"  ✅ already in their folder ({len(status['in_place'])}):")
+        bullets(status["in_place"])
     if status["not_found"]:
-        print(f"  ➖ not installed here, nothing to move ({len(status['not_found'])}): {', '.join(status['not_found'])}")
+        print(f"  ➖ not installed on this Mac: {len(status['not_found'])}")
     if not found:
-        print("  Homebrew reported no cask with a home folder. Run `brew update`, or check references/folders.yaml.")
+        print("  Homebrew reported no cask with a home folder here. Run `brew update`, or check references/folders.yaml.")
     print(f"  ➡️  to move: {len(steps)}")
     for s in steps:
         how = {"relink": "move, drop the old Homebrew record, brew install --cask --adopt",
                "adopt": "move, then brew install --cask --adopt",
                "stale": "cannot be linked yet: Homebrew's definition has no folder; run brew update and try again"}[s["kind"]]
-        print(f"  • {s['cask']}: {s['from']} → {s['to']}   ({how})")
+        print(f"      • {s['cask']}: {s['from']} → {s['to']}\n          ({how})")
+
     def names(state: str) -> list[str]:
         return [a["app"] for a in setapp if a["state"] == state]
 
-    print(f"\n🧩 Setapp apps in your category: {len(setapp)}")
+    print(f"\n🧩 Setapp apps in the '{name}' category: {len(setapp)}")
     for state, label in (("homebrew", "🍺 installed by Homebrew, to be removed"),
                          ("outside", "⚠️  installed some other way (left alone)"),
                          ("setapp", "✅ already in the Setapp folder"),
                          ("absent", "➖ not installed on this Mac")):
         if names(state):
-            print(f"  {label} ({len(names(state))}): {', '.join(names(state))}")
-    print(f"  📝 To install from Setapp yourself: {sum(1 for a in setapp if a['state'] != 'setapp')} (list in {write_setapp_list(setapp)})")
+            print(f"  {label} ({len(names(state))}):")
+            bullets(names(state))
+    todo = [a["app"] for a in setapp if a["state"] != "setapp"]
+    print(f"\n  📝 To install from Setapp yourself ({len(todo)}), also saved to {write_setapp_list(setapp, name)}:")
+    bullets(todo)
     if not setapp:
-        print("  (This inventory has no Setapp apps. Run `scripts/setup.sh setapp` on the Mac where Setapp is installed.)")
+        print("  (No Setapp apps in this category. Run `scripts/setup.sh setapp` on the Mac where Setapp is installed.)")
 
     if not args.apply:
         print("\nNothing changed. Quit the apps listed, then run again with --apply.")
         return
+    for folder in folders:
+        if not Path(folder).is_dir():
+            try:
+                Path(folder).mkdir(parents=True, exist_ok=True)
+                print(f"\n📁 Created {folder}")
+            except OSError as exc:
+                print(f"\n⚠️  Could not create {folder}: {exc}")
     if not steps and not (brew_copies and not args.keep_homebrew_setapp):
-        return
+        sys.exit(0)
 
     failed = 0
     if steps and common.confirm(f"\nMove {len(steps)} app(s) now? Quit them first."):
@@ -238,9 +285,9 @@ def main() -> None:
             print(f"\n→ {token}", flush=True)
             if not run_step("uninstall", ["brew", "uninstall", "--cask", token]):
                 failed += 1
-    todo = [a["app"] for a in setapp if a["state"] != "setapp"]
     if todo:
-        print("\nNext: open Setapp, sign in, and install and license these yourself:\n  " + ", ".join(todo))
+        print("\nNext: open Setapp, sign in, and install and license these yourself:")
+        bullets(todo, "  ")
     sys.exit(1 if failed else 0)
 
 
