@@ -70,6 +70,18 @@ def is_running(app: Path) -> bool:
     return probe.returncode == 0
 
 
+def find_loose(home: Path, bundle_name: str, token: str) -> Path | None:
+    """The app sitting directly in `home`: by its exact bundle name, else by a name that matches the cask
+    ignoring case, spaces and dashes (so "Art Craft.app" still counts as the artcraft cask)."""
+    if not any(Path(r) == home for r in audit.app_dirs()) or not home.is_dir():
+        return None
+    exact = home / bundle_name
+    if exact.exists():
+        return exact
+    want = common.alnum(token)
+    return next((a for a in sorted(home.iterdir()) if a.suffix == ".app" and common.alnum(a.stem) == want), None)
+
+
 def plan_casks(candidates: list[str], managed: set[str]) -> tuple[list[dict], dict[str, list[str]]]:
     """(moves to make, every folder-bound cask by state: in_place / to_move / not_found)."""
     steps = []
@@ -82,7 +94,7 @@ def plan_casks(candidates: list[str], managed: set[str]) -> tuple[list[dict], di
             # Only a subfolder of an app folder counts (ArtCraft inside /Applications); a plain
             # /Applications target such as Meta.app is where the user chose to keep it.
             home = Path(target).parent.parent
-            loose = next((root / bundle_name for root in audit.app_dirs() if root == home and (root / bundle_name).exists()), None)
+            loose = find_loose(home, bundle_name, token)
             if not loose:
                 status["not_found"].append(token)
                 continue
@@ -186,7 +198,10 @@ def main() -> None:
     wanted = list(preset.get("casks") or [])  # this category's casks, without not_needed, your excludes or Setapp's
     if not args.skip_update:
         print("\n🔄 Updating Homebrew so cask definitions (which say where each app belongs) are current...", flush=True)
-        subprocess.run(["brew", "update"], capture_output=True)
+        update = subprocess.run(["brew", "update"], capture_output=True, text=True)
+        if update.returncode != 0:
+            tail = (update.stderr or update.stdout).strip().splitlines()[-3:]
+            print("   ⚠️  brew update failed, so cask definitions may be out of date:\n      " + "\n      ".join(tail))
     print(f"\n🔍 Looking at the '{name}' category for apps in the wrong folder...", flush=True)
     steps, status = plan_casks(sorted(wanted), managed)
     setapp = plan_setapp(managed, name, store)
@@ -216,7 +231,7 @@ def main() -> None:
     for s in steps:
         how = {"relink": "move, drop the old Homebrew record, brew install --cask --adopt",
                "adopt": "move, then brew install --cask --adopt",
-               "stale": "cannot be linked yet: Homebrew's definition has no folder; run brew update and try again"}[s["kind"]]
+               "stale": "will be moved; linking it to Homebrew has to wait, because Homebrew's definition does not name this folder yet"}[s["kind"]]
         print(f"      • {s['cask']}: {s['from']} → {s['to']}\n          ({how})")
 
     def names(state: str) -> list[str]:
@@ -250,19 +265,26 @@ def main() -> None:
         sys.exit(0)
 
     failed = 0
-    if steps and common.confirm(f"\nMove {len(steps)} app(s) now? Quit them first."):
+    moved: list[str] = []
+    skipped: list[str] = []
+    if steps and not common.confirm(f"\nMove {len(steps)} app(s) now? Quit them first."):
+        print("   Nothing was moved, because the answer was not yes (use --yes to skip this question).")
+    elif steps:
         for s in steps:
             print(f"\n→ {s['cask']}", flush=True)
-            if s["kind"] == "stale":
-                print("   skipped: Homebrew's definition does not name the folder yet; run `brew update`, then try again")
-                continue
             if is_running(Path(s["from"])):
                 print("   skipped: the app is running; quit it and run again")
+                skipped.append(f"{s['cask']} (running)")
                 failed += 1
                 continue
             Path(s["to"]).parent.mkdir(parents=True, exist_ok=True)
             shutil.move(s["from"], s["to"])
             print(f"   moved to {s['to']}")
+            if s["kind"] == "stale":
+                # Homebrew would look for it in /Applications, so linking now would fail or point at the wrong place.
+                print("   not linked to Homebrew yet: its definition does not name this folder. Run `brew update`, then `relocate` again.")
+                moved.append(s["cask"])
+                continue
             ok = True
             if s["kind"] == "relink":
                 # The old record points at the old path; with the app gone from there, this only removes the record.
@@ -270,15 +292,16 @@ def main() -> None:
             ok = ok and run_step("adopt", ["brew", "install", "--cask", "--adopt", s["cask"]])
             if not ok:
                 if s["kind"] == "adopt":
-                    shutil.move(s["to"], s["from"])
-                    print("   adopt failed; the app was put back where it was")
+                    print("   linking to Homebrew failed; the app stays in its new folder. Finish with: brew install --cask --adopt " + s["cask"])
                 else:
                     print(f"   the app is now at {s['to']} but Homebrew is not linked to it; finish with: brew install --cask --adopt {s['cask']}")
-            if ok and not Path(s["to"]).exists():
+            if not Path(s["to"]).exists():
                 print(f"   ⚠️  finished, but nothing is at {s['to']}")
                 ok = False
             print("   ✅ done" if ok else "   ❌ failed")
+            moved.append(s["cask"])
             failed += 0 if ok else 1
+        print(f"\n📦 Moved {len(moved)}: {', '.join(moved) or 'none'}" + (f"   Skipped {len(skipped)}: {', '.join(skipped)}" if skipped else ""))
     if brew_copies and not args.keep_homebrew_setapp and common.confirm(
             f"\nRemove the {len(brew_copies)} Homebrew copies of Setapp apps so you can install them from Setapp? (Your data is kept.)"):
         for token in brew_copies:
