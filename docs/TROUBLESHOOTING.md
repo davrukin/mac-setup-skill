@@ -13,13 +13,12 @@ scripts/setup.sh relocate --preset developer            # plan only; nothing cha
 scripts/setup.sh relocate --preset developer --apply    # do it (quit the apps first)
 ```
 
-`relocate` runs `brew update` first, because the folder comes from the cask's current definition and an out-of-date Homebrew does not name it. Then, for each Craft app sitting loose in `/Applications`:
+`relocate` runs `brew update` first (and shows its error if that fails), then works in two steps:
 
-1. it moves the app into `/Applications/ArtCraft/` (skipping any app that is running);
-2. if Homebrew had installed it, it removes Homebrew's old record, which still points at the old path (the app is already gone from there, so only the record goes);
-3. it links the app at its new path with `brew install --cask --adopt NAME`.
+1. **Move.** Every Craft app in `/Applications` goes into `/Applications/ArtCraft/`. An app that is running is skipped and named.
+2. **Link.** Each moved app is linked to Homebrew with `brew install --cask --adopt`. If Homebrew had installed it, its old record (which still points at the old path) is removed first. When the cask's own definition does not name the folder, the command adds `--appdir=/Applications/ArtCraft`, so Homebrew looks in the right place; I checked that a cask adopted this way is later found by a plain `brew uninstall`.
 
-Nothing is downloaded and your settings and data are not touched; only `brew uninstall --zap` removes those. If the adopt step fails for an app Homebrew did not install, the app is put back where it was; for one Homebrew did install, the script tells you the one command that finishes the link. If Homebrew's definition still names no folder after `brew update`, the app is listed as "cannot be linked yet" and left alone, because Homebrew would look for it in `/Applications`. `references/folders.yaml` lists which casks belong in which folder; add your own.
+Nothing is downloaded and your settings and data are not touched; only `brew uninstall --zap` removes those. If step 2 fails for an app, it stays safely in the new folder and the exact command to finish is printed. `references/folders.yaml` lists which casks belong in which folder; add your own. Every `brew` command the script runs has Homebrew's automatic removal of unused dependencies turned off, so it does not clean up unrelated packages.
 
 Do not drag the apps yourself: Homebrew then looks for them in the old place.
 
